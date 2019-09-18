@@ -101,7 +101,20 @@ void analyzer(char* input_file_name, char* output_file_name){
 ///
 /// under 'testcase' directory, there could be many *.cminus files.
 /// \todo student should fill this function
-void getAllTestcase(char filename[][256]){
+void getAllTestcase(char filename[][256], *files_count){
+
+
+	*files_count = 100;
+}
+
+int change_suffix(char *name, char *from, char *to) {
+	if strlen(name) < strlen(from) {
+	return -1;
+	} else {
+		
+		
+		return 0;
+	}
 }
 
 /// \brief process all *.cminus file
@@ -111,11 +124,11 @@ void getAllTestcase(char filename[][256]){
 /// then create *.tokens files under 'tokens' directory
 /// \todo student should fill this function
 int main(int argc, char **argv){
-	char filename[10][256];
+	char filename[64][256];
 	char output_file_name[256];
 	char suffix[] = ".tokens";
 	getAllTestcase(filename);
-	for(int i = 0; i < files_count; i++){
+	for(int i = 0; i < (files_count<64?files_count:64); i++){
 
 			analyzer(filename[i],output_file_name);
 	}
