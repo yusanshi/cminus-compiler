@@ -6,10 +6,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-int files_count = 0;
+
 int lines;
 int pos_start;
 int pos_end;
+int count_new_line(const char *, int *);
+
+#define BUMP_POS(n)                       \
+        do {                              \
+                pos_start = pos_end;      \
+                pos_end = pos_start + n;  \
+        } while(0)
 
 enum cminus_token_type {
         ERROR = 258,
@@ -54,7 +61,53 @@ enum cminus_token_type {
 
  /****请在此补全所有flex的模式与动作  start******/
 
-. {return ERROR;}
+\/\*([^*]|[\r\n]|\*+([^/]|[\r\n]))*\*+\/ {
+        int after_nl;
+        lines += count_new_line(yytext, &after_nl);
+        if (after_nl != 0) {
+                pos_start = pos_end = after_nl + 1;
+        } else {
+                BUMP_POS(strlen(yytext));
+        }
+        return COMMENT;
+}
+"[]" { BUMP_POS(2); return ARRAY; }
+
+ /* ops */
+"+" { BUMP_POS(1); return ADD; }
+"-" { BUMP_POS(1); return SUB; }
+"*" { BUMP_POS(1); return MUL; }
+"/" { BUMP_POS(1); return DIV; }
+"<=" { BUMP_POS(2); return LTE; }
+"<" { BUMP_POS(1); return LT; }
+">=" { BUMP_POS(2); return GTE; }
+">" { BUMP_POS(1); return GT; }
+"==" { BUMP_POS(2); return EQ; }
+"!=" { BUMP_POS(2); return NEQ; }
+"=" { BUMP_POS(1); return ASSIN; }
+";" { BUMP_POS(1); return SEMICOLON; }
+"," { BUMP_POS(1); return COMMA; }
+"(" { BUMP_POS(1); return LPARENTHESE; }
+")" { BUMP_POS(1); return RPARENTHESE; }
+"[" { BUMP_POS(1); return LBRACKET; }
+"]" { BUMP_POS(1); return RBRACKET; }
+"{" { BUMP_POS(1); return LBRACE; }
+"}" { BUMP_POS(1); return RBRACE; }
+
+ /* keywords */
+"else" { BUMP_POS(4); return ELSE; }
+"if" { BUMP_POS(2); return IF; }
+"int" { BUMP_POS(3); return INT; }
+"return" { BUMP_POS(6); return RETURN; }
+"void" { BUMP_POS(4); return VOID; }
+"while" { BUMP_POS(5); return WHILE; }
+
+[a-zA-Z]+ { BUMP_POS(strlen(yytext)); return IDENTIFIER; }
+[0-9]+ { BUMP_POS(strlen(yytext)); return NUMBER; }
+
+"\n" { pos_end = pos_start = 1; lines++; return EOL; }
+[ \t] { BUMP_POS(1); return BLANK; }
+. { return ERROR; }
 
 
  /****  end******/
