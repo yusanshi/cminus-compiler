@@ -10,7 +10,10 @@
 int lines;
 int pos_start;
 int pos_end;
-int count_new_line(const char *, int *);
+
+int count_new_line(const char *str, int *after_nl);
+static int str_ends_with(const char *str, const char *ending);
+static void path_change_suffix(char *path, const char *suffix);
 
 #define BUMP_POS(n)                       \
         do {                              \
@@ -122,6 +125,11 @@ enum cminus_token_type {
 /// \todo student should fill this function
 void analyzer(char *input_file_name, char *output_file_name)
 {
+        // Setup
+        lines = 1;
+        pos_start = 1;
+        pos_end = 1;
+
         // Meddle with input and output paths
         char input_path[256] = "./testcase/";
         if (input_file_name)
@@ -151,7 +159,7 @@ void analyzer(char *input_file_name, char *output_file_name)
         while ((token = yylex())) {
                 switch (token) {
                 case ERROR:
-                        fprintf(fout, "[ERR]: unable to analysize %s at %d line, "
+                        fprintf(fout, "[ERR]: unable to analyze %s at %d line, "
                                 "from %d to %d\n", yytext, lines, pos_start, pos_end);
                         break;
                 case COMMENT:
@@ -189,13 +197,6 @@ int count_new_line(const char *str, int *after_nl)
         return ret;
 }
 
-void setup()
-{
-        lines = 1;
-        pos_start = 1;
-        pos_end = 1;
-}
-
 /// \brief get all file paths under 'testcase' directory
 ///
 /// under 'testcase' directory, there could be many *.cminus files.
@@ -203,7 +204,43 @@ void setup()
 static int get_all_testcase(char filename[][256])
 {
         int num = 0;
+        DIR *cases_dir = opendir("testcase");
+        if (cases_dir == NULL) {
+                printf("Error opening testcase dir\n");
+                exit(1);
+        }
+
+        struct dirent *stuff;
+        while ((stuff = readdir(cases_dir)) != NULL) {
+                if (!str_ends_with(stuff->d_name, ".cminus"))
+                        continue;
+                strcpy(filename[num++], stuff->d_name);
+        }
+
+        closedir(cases_dir);
         return num;
+}
+
+static int str_ends_with(const char *str, const char *ending)
+{
+        if (str == NULL || ending == NULL)
+                return 0;
+
+        int str_len = strlen(str);
+        int end_len = strlen(ending);
+        if (str_len < end_len)
+                return 0;
+
+        return strcmp(str + (str_len - end_len), ending) == 0;
+}
+
+static void path_change_suffix(char *path, const char *suffix)
+{
+        char *dot = strrchr(path, '.');
+        if (dot == NULL || suffix == NULL)
+                return;
+
+        strcpy(dot + 1, suffix);
 }
 
 // This macro is for testing on my machine. Hope TAs do not define it
@@ -217,13 +254,15 @@ static int get_all_testcase(char filename[][256])
 /// \todo student should fill this function
 int main(int argc, char **argv)
 {
-        char filename[10][256];
-        char output_file_name[256];
-        char suffix[] = ".tokens";
-        int files_count = get_all_testcase(filename);
-        for (int i = 0; i < files_count; i++) {
-                setup();
-                analyzer(filename[i], output_file_name);
+        char fins[10][256];
+        char fout[256];
+        const char *suffix = "tokens";
+        int file_count = get_all_testcase(fins);
+        for (int i = 0; i < file_count; i++) {
+                strcpy(fout, fins[i]);
+                path_change_suffix(fout, suffix);
+
+                analyzer(fins[i], fout);
         }
         return 0;
 }
