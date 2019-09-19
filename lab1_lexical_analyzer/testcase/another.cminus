@@ -1,0 +1,41 @@
+int fact(int n)
+/*
+ * a
+ * b
+ * c
+ * d
+ * e
+ * f
+ * g
+ **/
+{
+        /* random comments */
+        if (n <= 1) /* blah blah
+             */ return 1;
+        return fact(n - 1) * n;/*
+}
+comment
+*/}
+
+/*
+ multi line
+ comment
+ */
+
+/****************************/
+void dummy() {}
+/* */
+
+void foo(char blah[]) /** I don't know
+what I am doing **/{
+        blah[0] = 0; /* seg fault? */
+}
+
+int fib(int /*
+       strange comment
+              */n)
+{
+        if (n <= 1)
+                return 1;
+        return fib(n - /**/ 1) + fib(n - 2);
+}
