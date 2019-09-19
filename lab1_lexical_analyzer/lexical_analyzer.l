@@ -64,7 +64,7 @@ enum cminus_token_type {
 
  /****请在此补全所有flex的模式与动作  start******/
 
-\/\*([^*]|[\r\n]|\*+([^/]|[\r\n]))*\*+\/ {
+\/\*([^*/]|[^*]\/+|\*+[^/])*\*+\/ {
         int after_nl;
         lines += count_new_line(yytext, &after_nl);
         if (after_nl != 0) {
