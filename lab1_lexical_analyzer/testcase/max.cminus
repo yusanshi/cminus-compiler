@@ -1,6 +1,7 @@
+/* first comment ** */
 int max(int x, int y, int z)
 {
-/*** find the max of three numbers * /
+/*** find the max of three numbers*** ** * /
 (this multi-line comment is intended to test comment matching. *****/
 	if (x > y)
 	{
