@@ -118,8 +118,8 @@ void analyzer(char *input_file_name, char *output_file_name) {
             case ERROR:
                 fprintf(fp,
                         "[ERR]: unable to analysize %s at %d line, from %d to "
-                        "%lu\n",
-                        yytext, yylineno, column, column + yyleng);
+                        "%d\n",
+                        yytext, yylineno, column, (int)(column + yyleng));
                 column += yyleng;
                 break;
             case COMMENT:
@@ -138,8 +138,8 @@ void analyzer(char *input_file_name, char *output_file_name) {
                 column = 1;
                 break;
             default:
-                fprintf(fp, "%s\t%d\t%d\t%d\t%lu\n", yytext, token, yylineno,
-                        column, column + yyleng);
+                fprintf(fp, "%s\t%d\t%d\t%d\t%d\n", yytext, token, yylineno,
+                        column, (int)(column + yyleng));
                 column += yyleng;
         }
     }
@@ -193,8 +193,13 @@ int main(int argc, char **argv) {
          i < (files_count < FILE_MAX_NUMBER ? files_count : FILE_MAX_NUMBER);
          i++) {
         memset(output_file_name, 0, NAME_MAX_LENGTH);
-        change_suffix(filename[i], output_file_name, "cminus", "tokens");
-        analyzer(filename[i], output_file_name);
+        if (change_suffix(filename[i], output_file_name, "cminus", "tokens") ==
+            0) {
+            analyzer(filename[i], output_file_name);
+        } else {
+            printf("[ERR] Name and suffixs error\n");
+            exit(1);
+        }
     }
     return 0;
 }
