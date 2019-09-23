@@ -62,5 +62,8 @@ The `int` will not be detected because all three lines above are considered a co
 This problem exists because the asteroids are matched by `\*+[^/]` and `/` are matched by `[^*]`. Not having a non-greedy matching syntax, flex cannot be told to match `**/` with `\*+\/`. Adding `[^*]\/+` and changing `[^*]` to `[^*/]` fix it because we stop regarding `/` as a "normal character", as in the final regex, it is specified that there should not be any `*` before `/`.
 
 ## Summary
+I think the design of this lab is kind of weird. The directories of input and output sources are hard coded in the C function `analyzer`, disabling it from being used in a general case. Also, test cases detection and the files to which the output goes is managed by C code, while we have to use the `diff` command in a shell to verify the correctness.
 
-As for the time spent on this lab, I spent about two hours finishing everything except for the bug in comment with most of the time figuring out the syntax of flex.
+*In my opinion*, the `analyzer` function should just read `stdin` and print to `stdout`, with the `main` function being a single call to `analyzer`. This way we can use a shell script to detect test cases, manage output redirections (which is A LOT simpler!) and `diff` the result with that of the TA's. I slightly changed the `analyzer` function so that it can read `stdin` and `stdout` if the corresponding file name is `NULL`. This change should not make a difference in the test result on TA's machine since the call to `analyzer` in the current `main` function is always with non-`NULL` file names as its arguments.
+
+As for the time spent on this lab, I spent about two hours finishing writing regexes except for the bug in comment with most of the time figuring out the syntax of flex and then spent not much time finishing `main` and `get_all_testcase`. I was designing test cases as I was writing the code so I will not count its time.
