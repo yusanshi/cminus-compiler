@@ -180,6 +180,8 @@ void analyzer(char *input_file_name, char *output_file_name)
         fclose(fout);
 }
 
+/// Return the number of '\n' in `str`. *after_nl is the number of characters
+/// after the final '\n'.
 int count_new_line(const char *str, int *after_nl)
 {
         int len = strlen(str);
@@ -221,6 +223,7 @@ static int get_all_testcase(char filename[][256])
         return num;
 }
 
+/// Check if `str` ends with `ending`.
 static int str_ends_with(const char *str, const char *ending)
 {
         if (str == NULL || ending == NULL)
@@ -234,13 +237,15 @@ static int str_ends_with(const char *str, const char *ending)
         return strcmp(str + (str_len - end_len), ending) == 0;
 }
 
-static void path_change_suffix(char *path, const char *suffix)
+/// Change `path`'s extension to `ext`. Note that `ext` should not contain the
+/// leading dot.
+static void path_change_extension(char *path, const char *ext)
 {
         char *dot = strrchr(path, '.');
-        if (dot == NULL || suffix == NULL)
+        if (dot == NULL || ext == NULL)
                 return;
 
-        strcpy(dot + 1, suffix);
+        strcpy(dot + 1, ext);
 }
 
 // This macro is for testing on my machine. Hope TAs do not define it
@@ -260,7 +265,7 @@ int main(int argc, char **argv)
         int file_count = get_all_testcase(fins);
         for (int i = 0; i < file_count; i++) {
                 strcpy(fout, fins[i]);
-                path_change_suffix(fout, suffix);
+                path_change_extension(fout, suffix);
 
                 analyzer(fins[i], fout);
         }
