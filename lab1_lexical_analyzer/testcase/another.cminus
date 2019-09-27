@@ -26,7 +26,7 @@ comment
 void dummy() {}
 /* */
 
-void foo(char blah[]) /** I don't know
+void foo(int blah[]) /** I don't know
 what I am doing **/{
         blah[0] = 0; /* seg fault? */
 }
