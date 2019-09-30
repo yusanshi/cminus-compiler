@@ -5,11 +5,11 @@
 #define MAX_TOKEN_LEN 20
 #endif
 
-/// \brief get all file paths under 'testcase' directory
-///
-/// under 'testcase' directory, there could be many *.cminus files.
-/// \param filename array of output file names
-/// \return length of filename[][]
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 int getAllTestcase(char filename[][256]);
 
 #endif /* common/common.h */
