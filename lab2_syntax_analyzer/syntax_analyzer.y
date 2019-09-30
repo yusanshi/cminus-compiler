@@ -15,6 +15,7 @@ extern FILE *yyin;
 
 // external variables from lexical_analyzer module
 extern int lines;
+extern int pos_start;
 extern char *yytext;
 
 // Global syntax tree.
@@ -27,23 +28,119 @@ void yyerror(const char *s);
 /********** TODO: Fill in this union structure *********/
 }
 
-/********** TODO: Your token definition here ***********/
+%token ERROR
+%token ADD SUB MUL DIV
+%token LT LTE GT GTE EQ NEQ
+%token ASSIGN SEMICOLON COMMA
+%token LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE
+%token ELSE IF INT RETURN VOID WHILE
+%token IDENTIFIER NUMBER ARRAY LETTER EOL COMMENT BLANK
 
 /* compulsory starting symbol */
 %start program
 
 %%
-/*************** TODO: Your rules here *****************/
-program :
- | ;
-
+program : decl_list
+        ;
+decl_list : decl_list decl
+          | decl
+          ;
+decl : var_decl
+     | fun_decl
+     ;
+var_decl : type_spec IDENTIFIER SEMICOLON
+         | type_spec IDENTIFIER LBRACKET NUMBER RBRACKET SEMICOLON
+         ;
+type_spec : INT
+          | VOID
+          ;
+fun_decl : type_spec IDENTIFIER LPARENTHESE params RPARENTHESE cmpnd_stmt
+         ;
+params : param_list
+       | VOID
+       ;
+param_list : param_list COMMA param
+           | param
+           ;
+param : type_spec IDENTIFIER
+      | type_spec IDENTIFIER ARRAY
+      ;
+cmpnd_stmt : LBRACE local_decls stmt_list RBRACE
+           ;
+local_decls : /* empty */
+            | local_decls var_decl
+            ;
+stmt_list : /* empty */
+          | stmt_list stmt
+          ;
+stmt : matched_stmt
+     | open_stmt
+     ;
+matched_stmt : expr_stmt
+             | cmpnd_stmt
+             | IF LPARENTHESE expr matched_stmt ELSE matched_stmt
+             | iter_stmt
+             | ret_stmt
+             ;
+open_stmt : IF LPARENTHESE expr RPARENTHESE stmt
+          | IF LPARENTHESE expr RPARENTHESE matched_stmt ELSE open_stmt
+          ;
+expr_stmt : expr SEMICOLON
+          | SEMICOLON
+          ;
+iter_stmt : WHILE LPARENTHESE expr stmt
+          ;
+ret_stmt : RETURN SEMICOLON
+         | RETURN expr SEMICOLON
+         ;
+expr : var ASSIGN expr
+     | simple_expr
+     ;
+var : IDENTIFIER
+    | IDENTIFIER LBRACKET expr RBRACKET
+    ;
+simple_expr : addi_expr relop addi_expr
+            | addi_expr
+            ;
+relop : LT
+      | LTE
+      | GT
+      | GTE
+      | EQ
+      | NEQ
+      ;
+addi_expr : addi_expr addop term
+          | term
+          ;
+addop : ADD
+      | SUB
+      ;
+term : term mulop factor
+     | factor
+     ;
+mulop : MUL
+      | DIV
+      ;
+factor : LPARENTHESE expr RPARENTHESE
+       | var
+       | call
+       | NUMBER
+       ;
+call : IDENTIFIER LPARENTHESE args RPARENTHESE
+     ;
+args : /* empty */
+     | arg_list
+     ;
+arg_list : arg_list COMMA expr
+         | expr
+         ;
 %%
 
 void yyerror(const char *s)
 {
         // TODO: variables in Lab1 updates only in analyze() function in lexical_analyzer.l
         //       You need to move position updates to show error output below
-        fprintf(stderr, "%s: %d syntax error for %s\n", s, lines, yytext);
+        fprintf(stderr, "%s: %d:%d syntax error for %s\n", s, lines, pos_start, yytext);
 }
 
 /// \brief Syntax analysis from input file to output file
