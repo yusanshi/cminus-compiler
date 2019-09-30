@@ -1,64 +1,38 @@
 %option noyywrap
 %{
 /*****************声明和选项设置  begin*****************/
-#include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 
+#include <stdlib.h>
+
+#include "lab1_lexical_analyzer/lexical_analyzer.h"
+#include "common/common.h"
+
+#ifndef LAB1_ONLY
+#include "syntax_analyzer.h"
+#endif
+
 int lines;
 int pos_start;
 int pos_end;
 
-int count_new_line(const char *str, int *after_nl);
+static int count_new_line(const char *str, int *after_nl);
 static int str_ends_with(const char *str, const char *ending);
-static void path_change_suffix(char *path, const char *suffix);
 
 #define BUMP_POS(n)                       \
         do {                              \
                 pos_start = pos_end;      \
                 pos_end = pos_start + n;  \
         } while(0)
-
-enum cminus_token_type {
-        ERROR = 258,
-        ADD = 259,
-        SUB = 260,
-        MUL = 261,
-        DIV = 262,
-        LT = 263,
-        LTE = 264,
-        GT = 265,
-        GTE = 266,
-        EQ = 267,
-        NEQ = 268,
-        ASSIN = 269,
-        SEMICOLON = 270,
-        COMMA = 271,
-        LPARENTHESE = 272,
-        RPARENTHESE = 273,
-        LBRACKET = 274,
-        RBRACKET = 275,
-        LBRACE = 276,
-        RBRACE = 277,
-        ELSE = 278,
-        IF = 279,
-        INT = 280,
-        RETURN = 281,
-        VOID = 282,
-        WHILE = 283,
-        IDENTIFIER = 284,
-        NUMBER = 285,
-        LETTER = 286,
-        ARRAY = 287,
-        EOL = 288,
-        COMMENT = 289,
-        BLANK = 290,
-};
-/*****************end*****************/
-
 %}
+
+commentPattern "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
+digitPattern [0-9]
+numberPattern (0|[1-9]{digitPattern}*)
+identifierPattern [a-zA-Z][a-zA-Z]*
 
 %%
 
@@ -113,10 +87,10 @@ enum cminus_token_type {
 . { return ERROR; }
 
 
- /****  end******/
-%%
 
-/****************请按需求补全C代码 start*************/
+ /****请在此补全所有flex的模式与动作  end******/
+%%
+/****************C代码 start*************/
 
 /// \brief analysize a *.cminus file
 ///
@@ -182,7 +156,7 @@ void analyzer(char *input_file_name, char *output_file_name)
 
 /// Return the number of '\n' in `str`. *after_nl is the number of characters
 /// after the final '\n'.
-int count_new_line(const char *str, int *after_nl)
+static int count_new_line(const char *str, int *after_nl)
 {
         int len = strlen(str);
         int ret = 0;
@@ -237,39 +211,24 @@ static int str_ends_with(const char *str, const char *ending)
         return strcmp(str + (str_len - end_len), ending) == 0;
 }
 
-/// Change `path`'s extension to `ext`. Note that `ext` should not contain the
-/// leading dot.
-static void path_change_extension(char *path, const char *ext)
-{
-        char *dot = strrchr(path, '.');
-        if (dot == NULL || ext == NULL)
-                return;
-
-        strcpy(dot + 1, ext);
-}
-
-// This macro is for testing on my machine. Hope TAs do not define it
-// when compiling!
-#ifndef MY_MAGIC_MACRO__
 /// \brief process all *.cminus file
 ///
 /// note that: use relative path for all i/o operations
-///        process all *.cminus files under 'testcase' directory,
-/// then create *.tokens files under 'tokens' directory
-/// \todo student should fill this function
-int main(int argc, char **argv)
+/// \brief process all *.cminus file
+///
+/// note that: use relative path for all i/o operations
+int lex_main(int argc, char **argv)
 {
-        char fins[10][256];
-        char fout[256];
-        const char *suffix = "tokens";
-        int file_count = get_all_testcase(fins);
-        for (int i = 0; i < file_count; i++) {
-                strcpy(fout, fins[i]);
-                path_change_extension(fout, suffix);
-
-                analyzer(fins[i], fout);
+        char filename[10][256];
+        char output_file_name[256];
+        char suffix[] = ".tokens";
+        int files_count = get_all_testcase(filename);
+        for(int i = 0; i < files_count; i++) {
+                int name_len = strstr(filename[i], ".cminus") - filename[i];
+                strncpy(output_file_name, filename[i], name_len);
+                strcpy(output_file_name+name_len, suffix);
+                analyzer(filename[i], output_file_name);
         }
         return 0;
 }
-/**************** end*************/
-#endif
+/****************C代码 end*************/
