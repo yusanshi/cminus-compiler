@@ -24,6 +24,6 @@ add_subdirectory(lab1_lexical_analyzer)
 add_subdirectory(lab2_syntax_analyzer)
 
 add_executable(c-c
-	cminus_compiler.c
+    cminus_compiler.c
 )
 target_link_libraries(c-c lex syntax)

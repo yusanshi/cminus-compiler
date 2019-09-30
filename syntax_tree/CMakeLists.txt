@@ -1,5 +1,5 @@
 add_library(syntax_tree STATIC
-	SyntaxTree.c
+    SyntaxTree.c
 )
 target_link_libraries(syntax_tree)
 
