@@ -1,12 +1,6 @@
 %option noyywrap
 %{
 /*****************声明和选项设置  begin*****************/
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-
-#include <stdlib.h>
 
 #include "lab1_lexical_analyzer/lexical_analyzer.h"
 #include "common/common.h"
@@ -46,7 +40,9 @@ identifierPattern [a-zA-Z][a-zA-Z]*
         } else {
                 BUMP_POS(strlen(yytext));
         }
+#ifdef LAB1_ONLY
         return COMMENT;
+#endif
 }
 "[]" { BUMP_POS(2); return ARRAY; }
 
@@ -79,11 +75,34 @@ identifierPattern [a-zA-Z][a-zA-Z]*
 "void" { BUMP_POS(4); return VOID; }
 "while" { BUMP_POS(5); return WHILE; }
 
-[a-zA-Z]+ { BUMP_POS(strlen(yytext)); return IDENTIFIER; }
-[0-9]+ { BUMP_POS(strlen(yytext)); return NUMBER; }
+[a-zA-Z]+ {
+#ifndef LAB1_ONLY
+        yylval.strval = strdup(yytext);
+#endif
+        BUMP_POS(strlen(yytext));
+        return IDENTIFIER;
+}
+[0-9]+ {
+#ifndef LAB1_ONLY
+        yylval.strval = strdup(yytext);
+#endif
+        BUMP_POS(strlen(yytext));
+        return NUMBER;
+}
 
-"\n" { pos_end = pos_start = 1; lines++; return EOL; }
-[ \t] { BUMP_POS(1); return BLANK; }
+"\n" {
+        pos_end = pos_start = 1;
+        lines++;
+#ifdef LAB1_ONLY
+        return EOL;
+#endif
+}
+[ \t] {
+        BUMP_POS(1);
+#ifdef LAB1_ONLY
+        return BLANK;
+#endif
+}
 . { return ERROR; }
 
 

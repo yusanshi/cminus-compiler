@@ -12,6 +12,8 @@ SyntaxTreeNode * newSyntaxTreeNodeNoName()
 SyntaxTreeNode * newSyntaxTreeNode(const char * name)
 {
 	SyntaxTreeNode * newNode = (SyntaxTreeNode *)malloc(sizeof(SyntaxTreeNode));
+	newNode->children_num = 0;
+	newNode->parent = NULL;
 	if (name)
 		strcpy(newNode->name, name);
 	return newNode;
