@@ -23,7 +23,7 @@ comment
  */
 
 /****************************/
-void dummy() {}
+void dummy(void) {}
 /* */
 
 void foo(int blah[]) /** I don't know
