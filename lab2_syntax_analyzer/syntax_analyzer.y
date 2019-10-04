@@ -39,9 +39,12 @@ void yyerror(const char *s);
 
 %type <node> program decl_list decl var_decl type_spec fun_decl
 %type <node> params param_list param
-%type <node> cmpnd_stmt local_decls stmt_list stmt matched_stmt open_stmt
-%type <node> expr_stmt iter_stmt ret_stmt expr var simple_expr relop
+%type <node> cmpnd_stmt local_decls stmt_list stmt
+%type <node> expr_stmt sele_stmt iter_stmt ret_stmt expr var simple_expr relop
 %type <node> addi_expr addop term mulop factor call args arg_list
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 /* compulsory starting symbol */
 %start program
@@ -165,51 +168,37 @@ stmt_list : /* empty */ {
           SyntaxTreeNode_AddChild($$, $2);
           }
           ;
-stmt : matched_stmt {
+stmt : expr_stmt {
      $$ = newSyntaxTreeNode("stmt");
      SyntaxTreeNode_AddChild($$, $1);
      }
-     | open_stmt {
+     | cmpnd_stmt {
+     $$ = newSyntaxTreeNode("stmt");
+     SyntaxTreeNode_AddChild($$, $1);
+     }
+     | sele_stmt {
+     $$ = newSyntaxTreeNode("stmt");
+     SyntaxTreeNode_AddChild($$, $1);
+     }
+     | iter_stmt {
+     $$ = newSyntaxTreeNode("stmt");
+     SyntaxTreeNode_AddChild($$, $1);
+     }
+     | ret_stmt {
      $$ = newSyntaxTreeNode("stmt");
      SyntaxTreeNode_AddChild($$, $1);
      }
      ;
-matched_stmt : expr_stmt {
-             $$ = newSyntaxTreeNode("matched_stmt");
-             SyntaxTreeNode_AddChild($$, $1);
-             }
-             | cmpnd_stmt {
-             $$ = newSyntaxTreeNode("matched_stmt");
-             SyntaxTreeNode_AddChild($$, $1);
-             }
-             | IF LPARENTHESE expr matched_stmt ELSE matched_stmt {
-             $$ = newSyntaxTreeNode("matched_stmt");
-             SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("if"));
-             SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("("));
-             SyntaxTreeNode_AddChild($$, $3);
-             SyntaxTreeNode_AddChild($$, $4);
-             SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(")"));
-             SyntaxTreeNode_AddChild($$, $6);
-             }
-             | iter_stmt {
-             $$ = newSyntaxTreeNode("matched_stmt");
-             SyntaxTreeNode_AddChild($$, $1);
-             }
-             | ret_stmt {
-             $$ = newSyntaxTreeNode("matched_stmt");
-             SyntaxTreeNode_AddChild($$, $1);
-             }
-             ;
-open_stmt : IF LPARENTHESE expr RPARENTHESE stmt {
-          $$ = newSyntaxTreeNode("open_stmt");
+sele_stmt : IF LPARENTHESE expr RPARENTHESE stmt %prec LOWER_THAN_ELSE {
+          $$ = newSyntaxTreeNode("sele_stmt");
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("if"));
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("("));
           SyntaxTreeNode_AddChild($$, $3);
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(")"));
           SyntaxTreeNode_AddChild($$, $5);
           }
-          | IF LPARENTHESE expr RPARENTHESE matched_stmt ELSE open_stmt {
-          $$ = newSyntaxTreeNode("open_stmt");
+          | IF LPARENTHESE expr RPARENTHESE stmt ELSE stmt {
+          $$ = newSyntaxTreeNode("sele_stmt");
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("if"));
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("("));
           SyntaxTreeNode_AddChild($$, $3);
