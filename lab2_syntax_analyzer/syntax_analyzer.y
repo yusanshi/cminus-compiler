@@ -9,12 +9,12 @@ int yylex();
 int yyparse();
 int yyrestart();
 extern FILE *yyin;
+extern char *yytext;
 
 // external variables from lexical_analyzer module
 extern int lines;
 extern int pos_start;
 extern int pos_end;
-extern char *yytext;
 
 // Global syntax tree.
 SyntaxTree *gt;
@@ -38,10 +38,10 @@ void yyerror(const char *s);
 %token ARRAY
 
 %type <node> program decl_list decl var_decl type_spec fun_decl
-%type <node> params param_list param
-%type <node> cmpnd_stmt local_decls stmt_list stmt
-%type <node> expr_stmt sele_stmt iter_stmt ret_stmt expr var simple_expr relop
-%type <node> addi_expr addop term mulop factor call args arg_list
+%type <node> params param_list param cmpnd_stmt local_decls
+%type <node> stmt_list stmt expr_stmt sele_stmt iter_stmt
+%type <node> ret_stmt expr var simple_expr relop addi_expr
+%type <node> addop term mulop factor call args arg_list
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
@@ -400,9 +400,8 @@ arg_list : arg_list COMMA expr {
 
 void yyerror(const char *s)
 {
-        // TODO: variables in Lab1 updates only in analyze() function in lexical_analyzer.l
-        //       You need to move position updates to show error output below
-        fprintf(stderr, "%s: %d:%d syntax error near \"%s\"\n", s, lines, pos_start, yytext);
+        fprintf(stderr, "%s: %d:%d syntax error near \"%s\"\n",
+                s, lines, pos_start, yytext);
 }
 
 /// \brief Syntax analysis from input file to output file
@@ -426,7 +425,7 @@ void syntax(const char *input, const char *output)
         }
         yyrestart(yyin);
         printf("[START]: Syntax analysis start for %s\n", input);
-        FILE *fp = fopen(outputpath, "w+");
+        FILE *fp = fopen(outputpath, "w");
         if (!fp)
                 return;
 
@@ -437,17 +436,18 @@ void syntax(const char *input, const char *output)
 
         printf("[OUTPUT] Printing tree to output file %s\n", outputpath);
         printSyntaxTree(fp, gt);
+        fclose(fp);
+
         deleteSyntaxTree(gt);
         gt = NULL;
 
-        fclose(fp);
         printf("[END] Syntax analysis end for %s\n", input);
 }
 
 /// \brief starting function for testing syntax module.
 ///
 /// Invoked in test_syntax.c
-int syntax_main(int argc, char ** argv)
+int syntax_main(int argc, char **argv)
 {
         char filename[10][256];
         char output_file_name[256];
