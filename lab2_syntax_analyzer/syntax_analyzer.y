@@ -56,7 +56,8 @@ program : decl_list {
         }
         ;
 decl_list : decl_list decl {
-          $$ = $1;
+          $$ = newSyntaxTreeNode("declaration-list");
+          SyntaxTreeNode_AddChild($$, $1);
           SyntaxTreeNode_AddChild($$, $2);
           }
           | decl {
@@ -122,7 +123,8 @@ params : param_list {
        }
        ;
 param_list : param_list COMMA param {
-           $$ = $1;
+           $$ = newSyntaxTreeNode("param-list");
+           SyntaxTreeNode_AddChild($$, $1);
            SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(","));
            SyntaxTreeNode_AddChild($$, $3);
            }
@@ -155,17 +157,21 @@ cmpnd_stmt : LBRACE local_decls stmt_list RBRACE {
            ;
 local_decls : /* empty */ {
             $$ = newSyntaxTreeNode("local-declarations");
+            SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("epsilon"));
             }
             | local_decls var_decl {
-            $$ = $1;
+            $$ = newSyntaxTreeNode("local-declarations");
+            SyntaxTreeNode_AddChild($$, $1);
             SyntaxTreeNode_AddChild($$, $2);
             }
             ;
 stmt_list : /* empty */ {
           $$ = newSyntaxTreeNode("statement-list");
+          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("epsilon"));
           }
           | stmt_list stmt {
-          $$ = $1;
+          $$ = newSyntaxTreeNode("statement-list");
+          SyntaxTreeNode_AddChild($$, $1);
           SyntaxTreeNode_AddChild($$, $2);
           }
           ;
@@ -241,9 +247,10 @@ ret_stmt : RETURN SEMICOLON {
          }
          ;
 expr : var ASSIGN expr {
-     $$ = $3;  // TODO FIXME var and ASSIGN should be ahead of expr
+     $$ = newSyntaxTreeNode("expression");
      SyntaxTreeNode_AddChild($$, $1);
      SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("="));
+     SyntaxTreeNode_AddChild($$, $3);
      }
      | simple_expr {
      $$ = newSyntaxTreeNode("expression");
@@ -301,7 +308,8 @@ relop : LT {
       }
       ;
 addi_expr : addi_expr addop term {
-          $$ = $1;
+          $$ = newSyntaxTreeNode("additive-expression");
+          SyntaxTreeNode_AddChild($$, $1);
           SyntaxTreeNode_AddChild($$, $2);
           SyntaxTreeNode_AddChild($$, $3);
           }
@@ -320,7 +328,8 @@ addop : ADD {
       }
       ;
 term : term mulop factor {
-     $$ = $1;
+     $$ = newSyntaxTreeNode("term");
+     SyntaxTreeNode_AddChild($$, $1);
      SyntaxTreeNode_AddChild($$, $2);
      SyntaxTreeNode_AddChild($$, $3);
      }
@@ -369,6 +378,7 @@ call : IDENTIFIER LPARENTHESE args RPARENTHESE {
      ;
 args : /* empty */ {
      $$ = newSyntaxTreeNode("args");
+     SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("epsilon"));
      }
      | arg_list {
      $$ = newSyntaxTreeNode("args");
@@ -376,7 +386,8 @@ args : /* empty */ {
      }
      ;
 arg_list : arg_list COMMA expr {
-         $$ = $1;
+         $$ = newSyntaxTreeNode("arg-list");
+         SyntaxTreeNode_AddChild($$, $1);
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(","));
          SyntaxTreeNode_AddChild($$, $3);
          }
