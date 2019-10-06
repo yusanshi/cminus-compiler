@@ -51,7 +51,8 @@ void yyerror(const char *s);
 
 %%
 program : decl_list {
-        gt->root = $1;
+        gt->root = newSyntaxTreeNode("program");
+        SyntaxTreeNode_AddChild(gt->root, $1);
         }
         ;
 decl_list : decl_list decl {
@@ -59,28 +60,28 @@ decl_list : decl_list decl {
           SyntaxTreeNode_AddChild($$, $2);
           }
           | decl {
-          $$ = newSyntaxTreeNode("decl_list");
+          $$ = newSyntaxTreeNode("declaration-list");
           SyntaxTreeNode_AddChild($$, $1);
           }
           ;
 decl : var_decl {
-     $$ = newSyntaxTreeNode("decl");
+     $$ = newSyntaxTreeNode("declaration");
      SyntaxTreeNode_AddChild($$, $1);
      }
      | fun_decl {
-     $$ = newSyntaxTreeNode("decl");
+     $$ = newSyntaxTreeNode("declaration");
      SyntaxTreeNode_AddChild($$, $1);
      }
      ;
 var_decl : type_spec IDENTIFIER SEMICOLON {
-         $$ = newSyntaxTreeNode("var_decl");
+         $$ = newSyntaxTreeNode("var-declaration");
          SyntaxTreeNode_AddChild($$, $1);
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode($2));
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(";"));
          free($2);
          }
          | type_spec IDENTIFIER LBRACKET NUMBER RBRACKET SEMICOLON {
-         $$ = newSyntaxTreeNode("var_decl");
+         $$ = newSyntaxTreeNode("var-declaration");
          SyntaxTreeNode_AddChild($$, $1);
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode($2));
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("["));
@@ -92,16 +93,16 @@ var_decl : type_spec IDENTIFIER SEMICOLON {
          }
          ;
 type_spec : INT {
-          $$ = newSyntaxTreeNode("type_spec");
+          $$ = newSyntaxTreeNode("type-specifier");
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("int"));
           }
           | VOID {
-          $$ = newSyntaxTreeNode("type_spec");
+          $$ = newSyntaxTreeNode("type-specifier");
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("void"));
           }
           ;
 fun_decl : type_spec IDENTIFIER LPARENTHESE params RPARENTHESE cmpnd_stmt {
-         $$ = newSyntaxTreeNode("fun_decl");
+         $$ = newSyntaxTreeNode("fun-declaration");
          SyntaxTreeNode_AddChild($$, $1);
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode($2));
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("("));
@@ -126,7 +127,7 @@ param_list : param_list COMMA param {
            SyntaxTreeNode_AddChild($$, $3);
            }
            | param {
-           $$ = newSyntaxTreeNode("param_list");
+           $$ = newSyntaxTreeNode("param-list");
            SyntaxTreeNode_AddChild($$, $1);
            }
            ;
@@ -145,7 +146,7 @@ param : type_spec IDENTIFIER {
       }
       ;
 cmpnd_stmt : LBRACE local_decls stmt_list RBRACE {
-           $$ = newSyntaxTreeNode("cmpnd_stmt");
+           $$ = newSyntaxTreeNode("compound-stmt");
            SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("{"));
            SyntaxTreeNode_AddChild($$, $2);
            SyntaxTreeNode_AddChild($$, $3);
@@ -153,7 +154,7 @@ cmpnd_stmt : LBRACE local_decls stmt_list RBRACE {
            }
            ;
 local_decls : /* empty */ {
-            $$ = newSyntaxTreeNode("local_decls");
+            $$ = newSyntaxTreeNode("local-declarations");
             }
             | local_decls var_decl {
             $$ = $1;
@@ -161,7 +162,7 @@ local_decls : /* empty */ {
             }
             ;
 stmt_list : /* empty */ {
-          $$ = newSyntaxTreeNode("stmt_list");
+          $$ = newSyntaxTreeNode("statement-list");
           }
           | stmt_list stmt {
           $$ = $1;
@@ -169,28 +170,28 @@ stmt_list : /* empty */ {
           }
           ;
 stmt : expr_stmt {
-     $$ = newSyntaxTreeNode("stmt");
+     $$ = newSyntaxTreeNode("statement");
      SyntaxTreeNode_AddChild($$, $1);
      }
      | cmpnd_stmt {
-     $$ = newSyntaxTreeNode("stmt");
+     $$ = newSyntaxTreeNode("statement");
      SyntaxTreeNode_AddChild($$, $1);
      }
      | sele_stmt {
-     $$ = newSyntaxTreeNode("stmt");
+     $$ = newSyntaxTreeNode("statement");
      SyntaxTreeNode_AddChild($$, $1);
      }
      | iter_stmt {
-     $$ = newSyntaxTreeNode("stmt");
+     $$ = newSyntaxTreeNode("statement");
      SyntaxTreeNode_AddChild($$, $1);
      }
      | ret_stmt {
-     $$ = newSyntaxTreeNode("stmt");
+     $$ = newSyntaxTreeNode("statement");
      SyntaxTreeNode_AddChild($$, $1);
      }
      ;
 sele_stmt : IF LPARENTHESE expr RPARENTHESE stmt %prec LOWER_THAN_ELSE {
-          $$ = newSyntaxTreeNode("sele_stmt");
+          $$ = newSyntaxTreeNode("selection-stmt");
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("if"));
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("("));
           SyntaxTreeNode_AddChild($$, $3);
@@ -198,7 +199,7 @@ sele_stmt : IF LPARENTHESE expr RPARENTHESE stmt %prec LOWER_THAN_ELSE {
           SyntaxTreeNode_AddChild($$, $5);
           }
           | IF LPARENTHESE expr RPARENTHESE stmt ELSE stmt {
-          $$ = newSyntaxTreeNode("sele_stmt");
+          $$ = newSyntaxTreeNode("selection-stmt");
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("if"));
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("("));
           SyntaxTreeNode_AddChild($$, $3);
@@ -209,17 +210,17 @@ sele_stmt : IF LPARENTHESE expr RPARENTHESE stmt %prec LOWER_THAN_ELSE {
           }
           ;
 expr_stmt : expr SEMICOLON {
-          $$ = newSyntaxTreeNode("expr_stmt");
+          $$ = newSyntaxTreeNode("expression-stmt");
           SyntaxTreeNode_AddChild($$, $1);
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(";"));
           }
           | SEMICOLON {
-          $$ = newSyntaxTreeNode("expr_stmt");
+          $$ = newSyntaxTreeNode("expression-stmt");
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(";"));
           }
           ;
 iter_stmt : WHILE LPARENTHESE expr RPARENTHESE stmt {
-          $$ = newSyntaxTreeNode("iter_stmt");
+          $$ = newSyntaxTreeNode("iteration-stmt");
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("while"));
           SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("("));
           SyntaxTreeNode_AddChild($$, $3);
@@ -228,12 +229,12 @@ iter_stmt : WHILE LPARENTHESE expr RPARENTHESE stmt {
           }
           ;
 ret_stmt : RETURN SEMICOLON {
-         $$ = newSyntaxTreeNode("ret_stmt");
+         $$ = newSyntaxTreeNode("return-stmt");
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("return"));
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(";"));
          }
          | RETURN expr SEMICOLON {
-         $$ = newSyntaxTreeNode("ret_stmt");
+         $$ = newSyntaxTreeNode("return-stmt");
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("return"));
          SyntaxTreeNode_AddChild($$, $2);
          SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(";"));
@@ -245,7 +246,7 @@ expr : var ASSIGN expr {
      SyntaxTreeNode_AddChild($$, newSyntaxTreeNode("="));
      }
      | simple_expr {
-     $$ = newSyntaxTreeNode("expr");
+     $$ = newSyntaxTreeNode("expression");
      SyntaxTreeNode_AddChild($$, $1);
      }
      ;
@@ -264,13 +265,13 @@ var : IDENTIFIER {
     }
     ;
 simple_expr : addi_expr relop addi_expr {
-            $$ = newSyntaxTreeNode("simple_expr");
+            $$ = newSyntaxTreeNode("simple-expression");
             SyntaxTreeNode_AddChild($$, $1);
             SyntaxTreeNode_AddChild($$, $2);
             SyntaxTreeNode_AddChild($$, $3);
             }
             | addi_expr {
-            $$ = newSyntaxTreeNode("simple_expr");
+            $$ = newSyntaxTreeNode("simple-expression");
             SyntaxTreeNode_AddChild($$, $1);
             }
             ;
@@ -305,7 +306,7 @@ addi_expr : addi_expr addop term {
           SyntaxTreeNode_AddChild($$, $3);
           }
           | term {
-          $$ = newSyntaxTreeNode("addi_expr");
+          $$ = newSyntaxTreeNode("additive-expression");
           SyntaxTreeNode_AddChild($$, $1);
           }
           ;
@@ -380,7 +381,7 @@ arg_list : arg_list COMMA expr {
          SyntaxTreeNode_AddChild($$, $3);
          }
          | expr {
-         $$ = newSyntaxTreeNode("arg_list");
+         $$ = newSyntaxTreeNode("arg-list");
          SyntaxTreeNode_AddChild($$, $1);
          }
          ;
