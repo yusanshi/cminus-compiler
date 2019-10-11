@@ -2,57 +2,18 @@
 %option yylineno
 %{
 /*****************声明和选项设置  begin*****************/
-#include <dirent.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <stdlib.h>
-#include "lab1_lexical_analyzer/lexical_analyzer.h"
+
 #include "common/common.h"
+#include "lab1_lexical_analyzer/lexical_analyzer.h"
 
 #ifndef LAB1_ONLY
 #include "syntax_analyzer.h"
 #endif
 
-#define NAME_MAX_LENGTH 256
-#define FILE_MAX_NUMBER 64
-
-enum cminus_token_type {
-    ERROR = 258,
-    ADD = 259,
-    SUB = 260,
-    MUL = 261,
-    DIV = 262,
-    LT = 263,
-    LTE = 264,
-    GT = 265,
-    GTE = 266,
-    EQ = 267,
-    NEQ = 268,
-    ASSIN = 269,
-    SEMICOLON = 270,
-    COMMA = 271,
-    LPARENTHESE = 272,
-    RPARENTHESE = 273,
-    LBRACKET = 274,
-    RBRACKET = 275,
-    LBRACE = 276,
-    RBRACE = 277,
-    ELSE = 278,
-    IF = 279,
-    INT = 280,
-    RETURN = 281,
-    VOID = 282,
-    WHILE = 283,
-    IDENTIFIER = 284,
-    NUMBER = 285,
-    LETTER = 286,
-    ARRAY = 287,
-    EOL = 288,
-    COMMENT = 289,
-    BLANK = 290
-};
 
 /*****************声明和选项设置  end*****************/
 
@@ -156,34 +117,6 @@ void analyzer(char *input_file_name, char *output_file_name) {
     printf("[END]: Analysis completed.\n");
 }
 
-/// \brief get all file paths under 'testcase' directory
-///
-/// under 'testcase' directory, there could be many *.cminus files.
-void getAllFilename(char *dir, char filename[][NAME_MAX_LENGTH],
-                    int *files_count) {
-    struct dirent *dp;
-    DIR *dirp = opendir(dir);
-    while ((dp = readdir(dirp)) != NULL) {
-        if (strlen(dp->d_name) > strlen(".cminus")) {
-            char *dot = strrchr(dp->d_name, '.');
-            if (dot && !strcmp(dot, ".cminus")) {
-                strcpy(filename[*files_count], dp->d_name);
-                (*files_count)++;
-            }
-        }
-    }
-    closedir(dirp);
-}
-
-int change_suffix(char *source, char *dest, char *before, char *after) {
-    if (strlen(source) < strlen(before)) {
-        return -1;
-    } else {
-        strncpy(dest, source, strlen(source) - strlen(before));
-        strcat(dest, after);
-        return 0;
-    }
-}
 
 /// \brief process all *.cminus file
 ///
@@ -193,14 +126,12 @@ int change_suffix(char *source, char *dest, char *before, char *after) {
 int lex_main(int argc, char **argv) {
     char filename[FILE_MAX_NUMBER][NAME_MAX_LENGTH];
     char output_file_name[NAME_MAX_LENGTH];
-    char suffix[] = ".tokens";
-    int files_count = 0;
-    getAllFilename("./testcase/", filename, &files_count);
+    int files_count = getAllTestcase(filename);
     for (int i = 0;
          i < (files_count < FILE_MAX_NUMBER ? files_count : FILE_MAX_NUMBER);
          i++) {
         memset(output_file_name, 0, NAME_MAX_LENGTH);
-        if (change_suffix(filename[i], output_file_name, "cminus", "tokens") ==
+        if (change_suffix(filename[i], output_file_name, ".cminus", ".tokens") ==
             0) {
             analyzer(filename[i], output_file_name);
         } else {
