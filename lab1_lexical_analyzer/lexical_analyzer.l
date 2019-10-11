@@ -8,6 +8,7 @@
 #include <sys/types.h>
 
 #include "common/common.h"
+#include "syntax_tree/SyntaxTree.h"
 #include "lab1_lexical_analyzer/lexical_analyzer.h"
 
 #ifndef LAB1_ONLY

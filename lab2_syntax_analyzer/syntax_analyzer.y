@@ -39,18 +39,18 @@ program :
 
 %%
 
-void yyerror(const char * s)
-{
-	// TODO: variables in Lab1 updates only in analyze() function in lexical_analyzer.l
-	//       You need to move position updates to show error output below
-	fprintf(stderr, "%s:%d syntax error for %s\n", s, lines, yytext);
+void yyerror(const char *s) {
+    // TODO: variables in Lab1 updates only in analyze() function in
+    // lexical_analyzer.l
+    //       You need to move position updates to show error output below
+    fprintf(stderr, "%s:%d syntax error for %s\n", s, lines, yytext);
 }
 
 /// \brief Syntax analysis from input file to output file
 ///
 /// \param input basename of input file
 /// \param output basename of output file
-void syntax(const char * input, const char * output)
+void syntax(const char *input, const char *output)
 {
 	gt = newSyntaxTree();
 

@@ -6,28 +6,28 @@
 #include "lab1_lexical_analyzer/lexical_analyzer.h"
 
 struct _SyntaxTreeNode {
-	struct _SyntaxTreeNode * parent;
-	struct _SyntaxTreeNode * children[1000];
-	int children_num;
+    struct _SyntaxTreeNode* parent;
+    struct _SyntaxTreeNode* children[1000];
+    int children_num;
 
-	char name[30];
+    char name[30];
 };
 typedef struct _SyntaxTreeNode SyntaxTreeNode;
 
-SyntaxTreeNode * newSyntaxTreeNodeNoName();
-SyntaxTreeNode * newSyntaxTreeNode(const char * name);
-SyntaxTreeNode * newSyntaxTreeNodeFromNum(const int num);
-int SyntaxTreeNode_AddChild(SyntaxTreeNode * parent, SyntaxTreeNode * child);
-void deleteSyntaxTreeNodeNoRecur(SyntaxTreeNode * node);
-void deleteSyntaxTreeNode(SyntaxTreeNode * node, int recursive);
+SyntaxTreeNode* newSyntaxTreeNodeNoName();
+SyntaxTreeNode* newSyntaxTreeNode(const char* name);
+SyntaxTreeNode* newSyntaxTreeNodeFromNum(const int num);
+int SyntaxTreeNode_AddChild(SyntaxTreeNode* parent, SyntaxTreeNode* child);
+void deleteSyntaxTreeNodeNoRecur(SyntaxTreeNode* node);
+void deleteSyntaxTreeNode(SyntaxTreeNode* node, int recursive);
 
 struct _SyntaxTree {
-	SyntaxTreeNode * root;
+    SyntaxTreeNode* root;
 };
 typedef struct _SyntaxTree SyntaxTree;
 
-SyntaxTree * newSyntaxTree();
-void deleteSyntaxTree(SyntaxTree * tree);
-void printSyntaxTree(FILE * fout, SyntaxTree * tree);
+SyntaxTree* newSyntaxTree();
+void deleteSyntaxTree(SyntaxTree* tree);
+void printSyntaxTree(FILE* fout, SyntaxTree* tree);
 
 #endif /* SyntaxTree.h */
