@@ -7,6 +7,13 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <stdlib.h>
+#include "lab1_lexical_analyzer/lexical_analyzer.h"
+#include "common/common.h"
+
+#ifndef LAB1_ONLY
+#include "syntax_analyzer.h"
+#endif
 
 #define NAME_MAX_LENGTH 256
 #define FILE_MAX_NUMBER 64
@@ -46,9 +53,13 @@ enum cminus_token_type {
     COMMENT = 289,
     BLANK = 290
 };
-/*****************end*****************/
+
+/*****************声明和选项设置  end*****************/
 
 %}
+
+commentPattern "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
+identifierPattern [a-zA-Z][a-zA-Z]*
 
 %%
 
@@ -86,17 +97,15 @@ enum cminus_token_type {
 [ \t]+ {return BLANK;}
 . {return ERROR;}
 
- /****  end******/
+ /****请在此补全所有flex的模式与动作  end******/
 %%
 
-/****************请按需求补全C代码 start*************/
+/****************C代码 start*************/
 
 /// \brief analysize a *.cminus file
 ///
 ///	\param input_file_name
 /// \param output_file_name
-/// \todo student should fill this function
-
 void analyzer(char *input_file_name, char *output_file_name) {
     char input_path[NAME_MAX_LENGTH] = "./testcase/";
     strcat(input_path, input_file_name);
@@ -150,7 +159,6 @@ void analyzer(char *input_file_name, char *output_file_name) {
 /// \brief get all file paths under 'testcase' directory
 ///
 /// under 'testcase' directory, there could be many *.cminus files.
-/// \todo student should fill this function
 void getAllFilename(char *dir, char filename[][NAME_MAX_LENGTH],
                     int *files_count) {
     struct dirent *dp;
@@ -182,8 +190,7 @@ int change_suffix(char *source, char *dest, char *before, char *after) {
 /// note that: use relative path for all i/o operations
 ///	process all *.cminus files under 'testcase' directory,
 /// then create *.tokens files under 'tokens' directory
-/// \todo student should fill this function
-int main(int argc, char **argv) {
+int lex_main(int argc, char **argv) {
     char filename[FILE_MAX_NUMBER][NAME_MAX_LENGTH];
     char output_file_name[NAME_MAX_LENGTH];
     char suffix[] = ".tokens";
@@ -202,5 +209,6 @@ int main(int argc, char **argv) {
         }
     }
     return 0;
+
 }
-/**************** end*************/
+/****************C代码 end*************/
