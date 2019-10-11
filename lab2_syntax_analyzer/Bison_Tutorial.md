@@ -77,6 +77,10 @@ int yylval;
 
 %%
 /*该部分定义规则，C的动作代码在每条规则后用花括号括起*/
+/*
+expression → factor | expression + factor
+factor → NUMBER | factor * NUMBER
+*/
 calclist: /*空规则*/
 	| calclist exp EOL { printf("output = %d\n", $2); }
 	;

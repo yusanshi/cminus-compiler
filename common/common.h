@@ -5,11 +5,22 @@
 #define MAX_TOKEN_LEN 20
 #endif
 
-/// \brief get all file paths under 'testcase' directory
+#ifndef NAME_MAX_LENGTH
+#define NAME_MAX_LENGTH 256
+#endif
+
+#ifndef FILE_MAX_NUMBER
+#define FILE_MAX_NUMBER 64
+#endif
+
+/// \brief change suffix in source string and save to dest string.
 ///
-/// under 'testcase' directory, there could be many *.cminus files.
-/// \param filename array of output file names
-/// \return length of filename[][]
-int getAllTestcase(char filename[][256]);
+/// \return 0 if no errors, or -1
+int change_suffix(char *source, char *dest, char *before, char *after);
+
+/// \brief get all files with suffix '.cminus' under 'testcase' directory
+///
+/// \return files number
+int getAllTestcase(char filename[][NAME_MAX_LENGTH]);
 
 #endif /* common/common.h */

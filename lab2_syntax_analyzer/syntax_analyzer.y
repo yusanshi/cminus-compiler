@@ -5,21 +5,20 @@
 
 #include "common/common.h"
 #include "syntax_tree/SyntaxTree.h"
-
 #include "lab1_lexical_analyzer/lexical_analyzer.h"
 
 // external functions from lex
 extern int yylex();
 extern int yyparse();
 extern int yyrestart();
-extern FILE * yyin;
+extern FILE *yyin;
 
 // external variables from lexical_analyzer module
 extern int lines;
-extern char * yytext;
+extern char *yytext;
 
 // Global syntax tree.
-SyntaxTree * gt;
+SyntaxTree *gt;
 
 void yyerror(const char * s);
 %}
@@ -87,14 +86,16 @@ void syntax(const char * input, const char * output)
 /// Invoked in test_syntax.c
 int syntax_main(int argc, char ** argv)
 {
+	/// TODO change 10 and 256 to CONSTANT
 	char filename[10][256];
 	char output_file_name[256];
 	const char * suffix = ".syntax_tree";
 	int fn = getAllTestcase(filename);
 	for (int i = 0; i < fn; i++) {
+	/// TODO use change_suffix here.
 			int name_len = strstr(filename[i], ".cminus") - filename[i];
 			strncpy(output_file_name, filename[i], name_len);
-			strcpy(output_file_name+name_len, suffix);
+			strcpy(output_file_name + name_len, suffix);
 			syntax(filename[i], output_file_name);
 	}
 	return 0;
