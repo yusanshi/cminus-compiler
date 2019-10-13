@@ -6,9 +6,55 @@
 
 ## 实验设计
 
-这里对实验中遇到的主要问题和解决过程进行叙述，一些小地方不再介绍。
+这里对实验中的主要问题和解决过程进行叙述，一些小地方不再介绍。
+
+### 建立语法树
+这一部分是整个 Lab2 的重中之重了。基本思路如下。
+首先声明终结符和非终结符。
+```
+%token ERROR 
+%token ADD SUB MUL DIV
+%token LT LTE GT GTE EQ NEQ
+......
+
+%type <tree_node> program declaration-list declaration var-declaration fun-declaration 
+%type <tree_node> params param-list param compound-stmt local-declarations
+......
+```
+接着写 Bison 的语法规则，这一部分费时又费力，为了减轻工作量，我在 Notepad++ 软件中，`Ctrl + H`打开替换功能，勾选下面的正则表达式，折腾好久，基本上保证最后的文本只需要进行少量修改就可以作为语法规则。
+
+下面以`var-declaration`为例说明语法规则的建立。
+
+`var-declaration`的语法如下：
+var-declaration → type-specifier `ID` ; | type-specifier `ID` `[` `NUM` `]`; 
+
+对于`|`分割的每一种情况，首先`$$=newSyntaxTreeNode(<name>);`建立结点，之后使用`SyntaxTreeNode_AddChild($$, <child>)`添加每个孩子：如果是非终结符，孩子就直接是`$(<count>)`，如果是终结符那么需要新建一个结点作为孩子，即`SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(<>));`。`actual_token_str()`是一个辅助函数，用于从 Token 获得对应的字符串表示（如`actual_token_str(SEMICOLON)`的结果是字符串`";"`。对`IDENTIFIER`和`NUMBER`的特殊处理见后文，这里不再叙述。
+
+最终的语法规则如下。
+
+```
+var-declaration :
+    type-specifier IDENTIFIER SEMICOLON  {
+        $$=newSyntaxTreeNode("var-declaration");
+        SyntaxTreeNode_AddChild($$, $1);
+        SyntaxTreeNode_AddChild($$, newSyntaxTreeNode($2));
+        SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(actual_token_str(SEMICOLON)));
+        free($2);
+    } |
+    type-specifier IDENTIFIER LBRACKET NUMBER RBRACKET SEMICOLON   {
+        $$=newSyntaxTreeNode("var-declaration");
+        SyntaxTreeNode_AddChild($$, $1);
+        SyntaxTreeNode_AddChild($$, newSyntaxTreeNode($2));
+        SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(actual_token_str(LBRACKET)));
+        SyntaxTreeNode_AddChild($$, newSyntaxTreeNodeFromNum($4));
+        SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(actual_token_str(RBRACKET)));
+        SyntaxTreeNode_AddChild($$, newSyntaxTreeNode(actual_token_str(SEMICOLON)));
+        free($2);
+    };
+```
 
 ### 传递`IDENTIFIER`和`NUMBER`
+
 为了让 Bison 得到 Flex 处理后的语义值，我采用了如下方案。
 
 首先定义`%union`，目的是让`yylval`这个全局变量有不同的成员（我们的`IDENTIFIER`和`NUMBER`分别是`char*`和`int`类型）。
@@ -36,7 +82,7 @@ int num;
     }
 ```
 
-最后一步就是在 Bison 的语法规则使用存储在`$(count)`里面的值了，使用的方式有两个，以`NUMBER`为例，第一种是用到`$(count)`时指明其要使用的成员，如下。
+最后一步就是在 Bison 的语法规则使用存储在`$(count)`里面的值了，使用的方式有两种，以`NUMBER`为例，第一种是用到`$(count)`时指明其要使用的成员，如下。
 ```
 %token IDENTIFIER NUMBER
 
@@ -120,3 +166,6 @@ program :
 ```
 好多个`0`看着就是赏心悦目。
 第一次用 Valgrind，表示它真的很强大，特别是泄露的定位方面很厉害。
+
+### Bison 中显示行号
+Bison 中显示行号（用于`yyerror()`）也是很简单，只需要`extern int yylineno;`即可，不过要注意要在`syntax()`函数中加上`yylineno = 1;`，要不然分析下一个文件时这个全局变量会累增，不会自动归零（归一）。其实这一部分和 Lab1 是一模一样的😁。
