@@ -70,3 +70,60 @@ const char* strtoken(Token t) {
             return "BLANK";
     }
 }
+
+const char* actual_token_str(Token t) {
+    switch (t) {
+        case ADD:
+            return "+";
+        case SUB:
+            return "-";
+        case MUL:
+            return "*";
+        case DIV:
+            return "/";
+        case LT:
+            return "<";
+        case LTE:
+            return "<=";
+        case GT:
+            return ">";
+        case GTE:
+            return ">=";
+        case EQ:
+            return "==";
+        case NEQ:
+            return "!=";
+        case ASSIN:
+            return "=";
+        case SEMICOLON:
+            return ";";
+        case COMMA:
+            return ",";
+        case LPARENTHESE:
+            return "(";
+        case RPARENTHESE:
+            return ")";
+        case LBRACKET:
+            return "[";
+        case RBRACKET:
+            return "]";
+        case LBRACE:
+            return "{";
+        case RBRACE:
+            return "}";
+        case ELSE:
+            return "else";
+        case IF:
+            return "if";
+        case INT:
+            return "int";
+        case RETURN:
+            return "return";
+        case VOID:
+            return "void";
+        case WHILE:
+            return "while";
+        case ARRAY:
+            return "[]";
+    }
+}

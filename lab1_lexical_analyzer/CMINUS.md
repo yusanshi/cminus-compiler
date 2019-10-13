@@ -39,7 +39,7 @@
 17. return-stmt → `return` ; | `return` expression ;
 18. expression → var `=` expression | simple-expression
 19. var → `ID` | `ID` `[` expression `]`
-20. simple-expression → additive-expression relop additive- expression | additive-expression
+20. simple-expression → additive-expression relop additive-expression | additive-expression
 21. relop → `<=` | `<` | `>` | `>=` | `==` | `!=`
 22. additive-expression → additive-expression addop term | term 
 23. addop → `+` | `-`
@@ -51,6 +51,7 @@
 29. arg-list → arg-list , expression | expression
 
 > 思考：
+>
 > 1. C-语言语法的特点，它的CFG
 
 # Sample Programs of C-

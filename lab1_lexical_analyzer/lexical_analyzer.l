@@ -4,8 +4,6 @@
 /*****************声明和选项设置  begin*****************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include "common/common.h"
 #include "syntax_tree/SyntaxTree.h"
@@ -19,9 +17,6 @@
 /*****************声明和选项设置  end*****************/
 
 %}
-
-commentPattern "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
-identifierPattern [a-zA-Z][a-zA-Z]*
 
 %%
 
@@ -51,12 +46,34 @@ identifierPattern [a-zA-Z][a-zA-Z]*
 "return" {return RETURN;}
 "void" {return VOID;}
 "while" {return WHILE;}
-[A-Za-z]+ {return IDENTIFIER;}
-[0-9]+ {return NUMBER;}
+[A-Za-z]+ {
+        #ifndef LAB1_ONLY
+        yylval.id = strdup(yytext);
+        #endif
+        return IDENTIFIER;
+    }
+[0-9]+ {
+        #ifndef LAB1_ONLY
+        yylval.num = atoi(yytext);
+        #endif
+        return NUMBER;
+    }
 "[]" {return ARRAY;}
-\n {return EOL;}
-"/*"([^*]|(\*+[^*/]))*"*"+"/" {return COMMENT;}
-[ \t]+ {return BLANK;}
+\n { 
+        #ifdef LAB1_ONLY
+        return EOL;
+        #endif
+    }
+"/*"([^*]|(\*+[^*/]))*"*"+"/" { 
+        #ifdef LAB1_ONLY
+        return COMMENT;
+        #endif
+    }
+[ \t]+ { 
+        #ifdef LAB1_ONLY
+        return BLANK;
+        #endif
+    }
 . {return ERROR;}
 
  /****请在此补全所有flex的模式与动作  end******/
