@@ -22,7 +22,7 @@ int change_suffix(char *source, char *dest, char *before, char *after) {
 int getAllFilename(char *dir, char *suffix, char filename[][NAME_MAX_LENGTH]) {
     struct dirent *dp;
     DIR *dirp = opendir(dir);
-	int files_count = 0;
+    int files_count = 0;
     while ((dp = readdir(dirp)) != NULL) {
         if (strlen(dp->d_name) > strlen(suffix)) {
             char *dot = strrchr(dp->d_name, '.');
@@ -33,14 +33,12 @@ int getAllFilename(char *dir, char *suffix, char filename[][NAME_MAX_LENGTH]) {
         }
     }
     closedir(dirp);
-	return files_count;
+    return files_count;
 }
-
 
 /// \brief get all files with suffix '.cminus' under 'testcase' directory
 ///
 /// \return files number
 int getAllTestcase(char filename[][NAME_MAX_LENGTH]) {
-	return getAllFilename("./testcase/",".cminus", filename);
+    return getAllFilename("./testcase/", ".cminus", filename);
 }
-

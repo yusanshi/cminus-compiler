@@ -1,11 +1,11 @@
 int mod(int a, int b) { return a - a / b; }
 
 int main(void) {
-    int year = 2019;
+    int year;
     if (mod(year, 4) == 0) {
         if (mod(year, 100) == 0) {
             /* year is divisible by 400, hence the year is a leap year */
-            if (mod(year, 400) == 0) {
+            if (mod(year, 1000) == 0) {
                 return 1;
             } else {
                 return 0;
