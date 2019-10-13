@@ -85,7 +85,7 @@ factor :
 ==21911== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
 ==21911== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
 ```
-很明显，`definitely lost: 206 bytes in 70 blocks`，Google 之，意识到`snatax_analyzer.y`使用`IDENTIFIER`后要相应`free(NUM)`，于是添加之，发现仍然`definitely lost: 24 bytes in 3 blocks`，Valgrind 的定位信息如下。
+很明显，`definitely lost: 206 bytes in 70 blocks`，Google 之，意识到`snatax_analyzer.y`使用`IDENTIFIER`后要相应`free($(count))`，于是添加之，发现仍然`definitely lost: 24 bytes in 3 blocks`，Valgrind 的定位信息如下。
 ```
 ==22319== 24 bytes in 3 blocks are definitely lost in loss record 2 of 5
 ==22319==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
