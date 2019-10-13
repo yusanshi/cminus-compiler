@@ -111,6 +111,26 @@ factor :
 ```
 我个人更喜欢第二种方式，因为如果使用第一种，在语法规则出现很多`NUMBER`的时候，每次使用`$(count)`都得加`<num>`，但是第一种方式只要声明 Token 时指定成员就可以了。
 
+### 过滤无用的词法符号
+做 Lab2（以及之后的实验）的时候需要把 Lab1 词法分析中的`EOL`, `COMMENT`, `BLANK`给过滤掉，过滤方法是在词法分析里把相应的`return`语句去掉。为了保证 Lab1 不受影响，我使用了`#ifdef`和`#endif`，中间的语句只有在`LAB1_ONLY`已定义的时候才会执行。最终相应代码如下。
+```
+\n { 
+        #ifdef LAB1_ONLY
+        return EOL;
+        #endif
+    }
+"/*"([^*]|(\*+[^*/]))*"*"+"/" { 
+        #ifdef LAB1_ONLY
+        return COMMENT;
+        #endif
+    }
+[ \t]+ { 
+        #ifdef LAB1_ONLY
+        return BLANK;
+        #endif
+    }
+```
+在编译运行 Lab1 相关程序时加上`LAB1_ONLY`的定义，这样`EOL`, `COMMENT`, `BLANK`可以正常返回，从而不影响 Lab1 实验结果的评测。
 
 ### 内存泄漏
 使用 Valgrind 检查是否存在内存泄露情况。
