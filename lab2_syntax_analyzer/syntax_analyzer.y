@@ -58,9 +58,9 @@ SyntaxTreeNode *tree_node;
 
 program :
     declaration-list  {
-	    $$ = newSyntaxTreeNode("program");
+        $$ = newSyntaxTreeNode("program");
         SyntaxTreeNode_AddChild($$, $1);
-	    gt->root = $$;
+        gt->root = $$;
     };
 declaration-list :
     declaration-list declaration  {
@@ -404,7 +404,7 @@ arg-list :
 %%
 
 void yyerror(const char *s) {
-	fprintf(stderr, "%s. Syntax error for %s (Line:%d Length:%d)\n", s, yytext, yylineno, yyleng);
+    fprintf(stderr, "%s. Syntax error for %s (Line:%d Length:%d)\n", s, yytext, yylineno, yyleng);
 }
 
 /// \brief Syntax analysis from input file to output file
@@ -413,37 +413,37 @@ void yyerror(const char *s) {
 /// \param output basename of output file
 void syntax(const char *input, const char *output)
 {
-	gt = newSyntaxTree();
+    gt = newSyntaxTree();
 
-	char inputpath[256] = "./testcase/";
-	char outputpath[256] = "./syntree/";
-	strcat(inputpath, input);
-	strcat(outputpath, output);
+    char inputpath[256] = "./testcase/";
+    char outputpath[256] = "./syntree/";
+    strcat(inputpath, input);
+    strcat(outputpath, output);
 
-	if (!(yyin = fopen(inputpath, "r"))) {
-		fprintf(stderr, "[ERR] Open input file %s failed.", inputpath);
-		exit(1);
-	}
-	yyrestart(yyin);
-	printf("[START]: Syntax analysis start for %s\n", input);
-	FILE * fp = fopen(outputpath, "w+");
-	if (!fp) {
-		return -1;
-	}
+    if (!(yyin = fopen(inputpath, "r"))) {
+        fprintf(stderr, "[ERR] Open input file %s failed.", inputpath);
+        exit(1);
+    }
+    yyrestart(yyin);
+    printf("[START]: Syntax analysis start for %s\n", input);
+    FILE * fp = fopen(outputpath, "w+");
+    if (!fp) {
+        return -1;
+    }
 
     yylineno = 1;
     
-	// yyerror() is invoked when yyparse fail. If you still want to check the return value, it's OK.
-	// `while (!feof(yyin))` is not needed here. We only analyze once.
-	yyparse();
+    // yyerror() is invoked when yyparse fail. If you still want to check the return value, it's OK.
+    // `while (!feof(yyin))` is not needed here. We only analyze once.
+    yyparse();
 
-	printf("[OUTPUT] Printing tree to output file %s\n", outputpath);
-	printSyntaxTree(fp, gt);
-	deleteSyntaxTree(gt);
-	gt = 0;
+    printf("[OUTPUT] Printing tree to output file %s\n", outputpath);
+    printSyntaxTree(fp, gt);
+    deleteSyntaxTree(gt);
+    gt = 0;
 
-	fclose(fp);
-	printf("[END] Syntax analysis end for %s\n", input);
+    fclose(fp);
+    printf("[END] Syntax analysis end for %s\n", input);
 }
 
 /// \brief starting function for testing syntax module.
@@ -451,7 +451,7 @@ void syntax(const char *input, const char *output)
 /// Invoked in test_syntax.c
 int syntax_main(int argc, char ** argv)
 {
-	char filename[FILE_MAX_NUMBER][NAME_MAX_LENGTH];
+    char filename[FILE_MAX_NUMBER][NAME_MAX_LENGTH];
     char output_file_name[NAME_MAX_LENGTH];
     int files_count = getAllTestcase(filename);
     for (int i = 0;
