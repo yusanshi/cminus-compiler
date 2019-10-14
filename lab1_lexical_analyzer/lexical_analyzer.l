@@ -132,7 +132,7 @@ void analyzer(char *input_file_name, char *output_file_name) {
         }
     }
     fclose(fp);
-    printf("[END]: Analysis completed.\n");
+    printf("[END]: Analysis completed.\n\n");
 }
 
 

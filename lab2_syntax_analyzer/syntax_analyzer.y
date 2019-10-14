@@ -443,7 +443,7 @@ void syntax(const char *input, const char *output)
     gt = 0;
 
     fclose(fp);
-    printf("[END] Syntax analysis end for %s\n", input);
+    printf("[END] Syntax analysis end for %s\n\n", input);
 }
 
 /// \brief starting function for testing syntax module.
