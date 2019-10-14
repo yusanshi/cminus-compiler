@@ -12,8 +12,9 @@
 
 这里对实验中的主要问题和解决过程进行叙述，一些小地方不再介绍。
 
-#### 建立语法树
-这一部分是整个 Lab2 的重中之重了。基本思路如下。
+### 建立语法树
+这一部分是整个 Lab2 的重中之重了，基本思路如下。
+
 首先声明终结符和非终结符。
 ```
 %token ERROR 
@@ -113,7 +114,7 @@ factor :
         SyntaxTreeNode_AddChild($$, newSyntaxTreeNodeFromNum($1));
     };
 ```
-我个人更喜欢第二种方式，因为如果使用第一种，在语法规则出现很多`NUMBER`的时候，每次使用`$(count)`都得加`<num>`，但是第一种方式只要声明 Token 时指定成员就可以了。
+我个人更喜欢第二种方式，因为如果使用第一种，在语法规则出现很多`NUMBER`的时候，每次使用`$(count)`都得加`<num>`，但是第二种方式只要声明 Token 时指定成员就可以了。
 
 #### 过滤无用的词法符号
 做 Lab2（以及之后的实验）的时候需要把 Lab1 词法分析中的`EOL`, `COMMENT`, `BLANK`给过滤掉，过滤方法是在词法分析里把相应的`return`语句去掉。为了保证 Lab1 不受影响，我使用了`#ifdef`和`#endif`，中间的语句只有在`LAB1_ONLY`已定义的时候才会执行。最终相应代码如下。
@@ -168,10 +169,10 @@ factor :
 ```
 program :
     declaration-list  {
-	    $$ = newSyntaxTreeNode("program");
+        $$ = newSyntaxTreeNode("program");
         SyntaxTreeNode_AddChild($$, $1);
         gt = newSyntaxTree();
-	    gt->root = $$;
+        gt->root = $$;
     };
 ```
 于是删除`snatax_analyzer.y`里的`gt = newSyntaxTree();`，终于：
