@@ -231,12 +231,8 @@ static int str_ends_with(const char *str, const char *ending)
 /// \brief process all *.cminus file
 ///
 /// note that: use relative path for all i/o operations
-/// \brief process all *.cminus file
-///
-/// note that: use relative path for all i/o operations
-int lex_main(int argc, char **argv)
-{
-        char filename[10][256];
+int lex_main(int argc, char **argv){
+        char filename[50][256];
         char output_file_name[256];
         char suffix[] = ".tokens";
         int files_count = get_all_testcase(filename);
