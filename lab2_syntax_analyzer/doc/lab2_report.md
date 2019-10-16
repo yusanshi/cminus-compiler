@@ -628,7 +628,7 @@ Bison 中显示行号（用于`yyerror()`）也是很简单，只需要`extern i
 
 ### 实验难点
 
-#### Syntax error for int
+#### Syntax error for (space)
 
 卡了挺久时间，反复在 Issue 里面翻看，最终找到了有用线索：我忘了跳过`EOL`, `COMMENT`, `BLANK`了！导致`int`后面的空格无法解析，所以刚开始就报错。
 
