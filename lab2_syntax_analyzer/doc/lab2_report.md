@@ -21,7 +21,7 @@ PB17000098
 在 cmake 中使用 `VERBOSE` 选项可以看到 `bison` 生成的自动机和具体的冲突细节. 其实不需要处理, 因为 `bison` 在移进和规约之间选择了正确的一个, 就是有一个 warning. 具体的解决办法参考了 http://210.45.114.30/gbxu/notice_board/issues/62#note_541.
 
 ## 实验结果
-以样例 [`lab2_selection-stmt.cminus`](../../testcase/lab2_selection-stmt.cminus) 为例, 其中的
+以样例 [`lab2_selection-stmt.cminus`](../../lab1_lexical_analyzer/testcase/lab2_selection-stmt.cminus) 为例, 其中的
 ```c
 if (i != 1) {
     return 3;
