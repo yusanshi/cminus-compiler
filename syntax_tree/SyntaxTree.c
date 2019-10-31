@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "SyntaxTree.h"
-#include "lab1_lexical_analyzer/lexical_analyzer.h"
 
 SyntaxTreeNode *newSyntaxTreeNodeNoName() { return newSyntaxTreeNode(NULL); }
 
@@ -45,10 +44,9 @@ void deleteSyntaxTreeNode(SyntaxTreeNode *node, int recursive) {
     free(node);
 }
 
-SyntaxTree *newSyntaxTree() {
-    SyntaxTree *newTree = (SyntaxTree *)malloc(sizeof(SyntaxTree));
-    newTree->root = 0;
-    return newTree;
+SyntaxTree * newSyntaxTree()
+{
+	return (SyntaxTree *)malloc(sizeof(SyntaxTree));
 }
 
 void deleteSyntaxTree(SyntaxTree *tree) {
