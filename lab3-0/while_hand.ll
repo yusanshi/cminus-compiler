@@ -34,15 +34,14 @@ while.continue:
   %2 = add nsw i32 %1, 1 ; i++
   store i32 %2, i32* %i.memory, align 4 ; save new value to i
   %3 = load i32, i32* %a.memory, align 4 ; load a to %3
-  ; Question: should I use %2 above directly or reload i to a unnamed temporary
-  %4 = add nsw i32 %2, %3 ; a += i
-  store i32 %4, i32* %a.memory, align 4 ; save new value to a
+  %4 = load i32, i32* %i.memory, align 4 ; load i to %4
+  %5 = add nsw i32 %3, %4 ; a += i
+  store i32 %5, i32* %a.memory, align 4 ; save new value to a
   br label %while.judge ; check condition
 
 while.end:
-  ; do nothing if %cmp is false
 
   ; in the end, return a
-  %5 = load i32, i32* %a.memory, align 4 ; load a to %5
-  ret i32 %5 ; return it
+  %6 = load i32, i32* %a.memory, align 4 ; load a to %6
+  ret i32 %6 ; return it
 }

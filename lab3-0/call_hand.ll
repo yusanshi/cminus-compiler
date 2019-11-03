@@ -13,10 +13,13 @@ target triple = "x86_64-pc-linux-gnu"
 ; as parameter and return an i32 value
 define i32 @callee(i32 %a) {
 entry:
-  ; multipy %a with 2 and save to %0, nsw means “No Signed Wrap”, 
+  %a.memory = alloca i32, align 4 ; allocate memory for parameter a
+  store i32 %a, i32* %a.memory, align 4 ; store parameter
+  %0 = load i32, i32* %a.memory, align 4 ; load from pointer of a to unnamed temporary
+  ; multipy %0 with 2 and save to %1, nsw means "No Signed Wrap", 
   ; the result value of the mul is a poison value if signed overflow occurs.
-  %0 = mul nsw i32 %a, 2
-  ret i32 %0 ; return it
+  %1 = mul nsw i32 %0, 2
+  ret i32 %1 ; return it
 }
 
 ; define function main() which has no parameters 
