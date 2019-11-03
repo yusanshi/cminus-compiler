@@ -4,6 +4,23 @@
 | ---- | ---------- |
 | 余磊 | PB17051053 |
 
+<!-- TOC -->
+
+- [lab3-0实验报告](#lab3-0实验报告)
+    - [实验要求](#实验要求)
+    - [实验设计](#实验设计)
+        - [手写`*.ll`文件](#手写ll文件)
+        - [编写 LLVM IR 生成器](#编写-llvm-ir-生成器)
+    - [实验难点](#实验难点)
+    - [实验总结](#实验总结)
+        - [学会了 LLVM IR 的基本语法](#学会了-llvm-ir-的基本语法)
+        - [学会了用 CPP 编写 LLVM IR 生成器](#学会了用-cpp-编写-llvm-ir-生成器)
+        - [关于 LLVM 的 Debug 和 Release 版](#关于-llvm-的-debug-和-release-版)
+        - [吐槽](#吐槽)
+        - [其它](#其它)
+
+<!-- /TOC -->
+
 ### 实验要求
 
 - 编译 LLVM，最好尝试一下`debug`的编译选项，`体验“较大的项目”的编译过程`；
@@ -30,7 +47,7 @@ target triple = "x86_64-pc-linux-gnu"
 #### 编写 LLVM IR 生成器
 
 基本上算是把上一步手写的`*.ll`文件逐句翻译了，我把手写的`*.ll`文件几乎每行语句都在`*.cpp`文件中以注释的形式呈现，摘录`assign_generator.cpp`和`assign_hand.ll`片段来做示范：
-```
+```c++
     // define i32 @main()
     auto mainFunc = Function::Create(FunctionType::get(TYPE32, false),
                                      GlobalValue::LinkageTypes::ExternalLinkage,
