@@ -6,4 +6,4 @@ syntree/*
 .vscode
 
 commands.md
-temp.c
+temp/
