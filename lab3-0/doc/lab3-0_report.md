@@ -6,13 +6,77 @@
 
 ### 实验要求
 
-- 编译 LLVM，最好尝试一下选择`debug`的编译选项，`体验“较大的项目”的编译过程`；
+- 编译 LLVM，最好尝试一下`debug`的编译选项，`体验“较大的项目”的编译过程`；
 - 为几个简单的程序手工编写对应的 LLVM IR 文件；
-- 为几个简单的程序编写对应 LLVM IR 生成器（使用 CPP 调用 LLVM IR 库）。
+- 为几个简单的程序编写对应的 LLVM IR 生成器（使用 CPP 调用 LLVM IR 库）。
 
-### 实验结果
+### 实验设计
 
-描述你的代码片段和每一个BasicBlock的对应关系
+#### 手写`*.ll`文件
+
+先从之前学长`LLVM IR及工具链介绍`的分享里复制：
+```
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-pc-linux-gnu"
+```
+当然，这个应该算可有可无。
+
+研究完例子后，会发现有一些基本套路：定义变量用`alloca i32`分配空间，并得到一个内存地址，赋值用`store`，取值用`load`，条件判断用`icmp`, `br`等。
+
+我在几乎每条语句后面都加了注释。
+
+语句后面的`align 4`（显示对齐声明）是我观察机器生成的`*.ll`后才加的，不看机器生成的文件，我自己是想不到要这样加的。
+
+#### 编写 LLVM IR 生成器
+
+基本上算是把上一步手写的`*.ll`文件逐句翻译了，我把手写的`*.ll`文件几乎每行语句都在`*.cpp`文件中以注释的形式呈现，摘录`assign_generator.cpp`和`assign_hand.ll`片段来做示范：
+```
+    // define i32 @main()
+    auto mainFunc = Function::Create(FunctionType::get(TYPE32, false),
+                                     GlobalValue::LinkageTypes::ExternalLinkage,
+                                     "main", module);
+    // entry:
+    auto entry = BasicBlock::Create(context, "entry", mainFunc);
+    builder.SetInsertPoint(entry);
+
+    // %a.memory = alloca i32
+    auto aAlloca = builder.CreateAlloca(TYPE32);
+    // store i32 1, i32* %a.memory
+    builder.CreateStore(CONST(1), aAlloca);
+    // %0 = load i32, i32* %a.memory
+    auto aLoad = builder.CreateLoad(aAlloca);
+    // ret i32 %0
+    builder.CreateRet(aLoad);
+```
+
+```
+define i32 @main() {
+entry:
+  %a.memory = alloca i32, align 4
+  store i32 1, i32* %a.memory, align 4
+  %0 = load i32, i32* %a.memory, align 4
+  ret i32 %0
+}
+```
+可以看到，下面代码的每一行都在上面代码的注释里。实验说明里面的`描述你的代码片段和每一个 BasicBlock 的对应关系`，自然就是：在`*.cpp`文件中，若出现下面的结构：
+```
+    ...
+    
+    // bb1:
+    builder.SetInsertPoint(bb1);
+    
+    ...
+
+    // bb2:
+    builder.SetInsertPoint(bb2);
+
+    ...
+
+```
+
+则两个`SetInsertPoint`中间的注释的内容对应`bb1`这个`BasicBlock`。
+为了节约助教的时间和我自己的时间，就不把所有代码复制粘贴过来了。:)
+
 
 ### 实验难点
 
