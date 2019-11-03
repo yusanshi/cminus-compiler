@@ -18,8 +18,9 @@ entry:
   br i1 %cmp, label %true, label %end
 true:
   ret i32 1 ; return 1
+  ; although this is unnecessory,
+  ; but I didn't leave it out for logical correctness.
+  br label %end
 end:
-  ; do nothing if %cmp is false
-
   ret i32 0 ; return 0 in the end
 }
