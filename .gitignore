@@ -4,4 +4,6 @@ syntree/*
 
 *.swp
 
+# used by yusanshi
 .vscode/
+yusanshi_temp/
