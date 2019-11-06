@@ -3,7 +3,3 @@ syntree/*
 !syntree/.gitkeep
 
 *.swp
-
-# used by yusanshi
-.vscode/
-yusanshi_temp/
