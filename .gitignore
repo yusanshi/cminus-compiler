@@ -3,5 +3,3 @@ syntree/*
 !syntree/.gitkeep
 
 *.swp
-
-.vscode/
