@@ -1,21 +1,37 @@
 # 团队工作记录
-
-记录团队的学习过程和讨论过程，
-
 ## 学习过程
-
 描述队长如何安排成员进行学习工作，并描述完成情况
 
-## 讨论1
+## 讨论 1
+- 时间：2019-11-08 下午
+- 地点：西区图书馆
+- 参与者：wrc, yl
 
-时间：xx月xx日 xx时到xx时
-地点：xxx
-参与者：
-主题：
-[讨论的照片或截图]
+### 代码风格
+- 变量名 `snake_case`
+- 使用 `clang-format` 自动格式化
+- 不要格式化助教的代码
+- 引用属性使用 `this->`
 
-### 过程描述
+### Git
+- Commit message
+    - 首字母大写
+    - 不要写 `Update filename`（具体一点）
+- Log
+    - 记得 `commit` 之前 `pull`，要是忘记了：
+    ```bash
+    git --no-pager log -1  # 记住 hash
+    git reset --hard HEAD^
+    git pull
+    git cherry-pick <hash>
+    ```
+- 不要动不需要动的文件，`git commit` 之前注意一下
 
+### 问题
+1. module, context 在哪里？
 
-### 结论
+    `this->module`, `this->context`
 
+2. unique_ptr
+
+    使用 `std::unique_ptr::get` 获得指针
