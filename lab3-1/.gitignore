@@ -1,4 +1,5 @@
 analyzer/lexical_analyzer.l
 analyzer/syntax_analyzer.y
+testcase/
 build/*
 .ycm_extra_conf.py

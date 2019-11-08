@@ -1,0 +1,17 @@
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+---
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 4
+UseTab: Never
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: true
+AllowShortIfStatementsOnASingleLine: false
+IndentCaseLabels: false
+Standard: Cpp11
+SortIncludes: false
+BreakBeforeBinaryOperators: NonAssignment
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Empty
+SpacesBeforeTrailingComments: 2
+---
