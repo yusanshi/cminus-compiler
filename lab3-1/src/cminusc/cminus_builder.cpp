@@ -1,4 +1,5 @@
 #include "cminus_builder.hpp"
+#include <iostream>
 
 using namespace llvm;
 using namespace std;
@@ -24,11 +25,24 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
 void CminusBuilder::visit(syntax_fun_declaration &node) {
     auto type = (node.type == TYPE_INT) ? Type::getInt32Ty(this->context)
                                         : Type::getVoidTy(this->context);
-
-    auto func =
-        Function::Create(FunctionType::get(type, /* TODO: params ,*/ false),
-                         GlobalValue::LinkageTypes::ExternalLinkage,
-                         node.id.c_str(), this->module.get());
+    Function *func;
+    if (node.params.empty()) {
+        func = Function::Create(FunctionType::get(type, false),
+                                GlobalValue::LinkageTypes::ExternalLinkage,
+                                node.id.c_str(), this->module.get());
+    } else {
+        std::vector<llvm::Type *> params;
+        for (auto p : node.params) {
+            if (p.get()->isarray) {
+                params.push_back(Type::getInt32PtrTy(this->context));
+            } else {
+                params.push_back(Type::getInt32Ty(this->context));
+            }
+        }
+        func = Function::Create(FunctionType::get(type, params, false),
+                                GlobalValue::LinkageTypes::ExternalLinkage,
+                                node.id.c_str(), this->module.get());
+    }
     this->scope.push(node.id, func);
 }
 
