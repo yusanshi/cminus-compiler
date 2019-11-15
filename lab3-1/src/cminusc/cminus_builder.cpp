@@ -4,8 +4,7 @@
 using namespace llvm;
 using namespace std;
 
-// You can define global variables here
-// to store state
+static Function *curr_function = nullptr;
 
 void CminusBuilder::visit(syntax_program &node) {
     for (auto d : node.declarations) {
@@ -47,6 +46,8 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
                                 node.id.c_str(), this->module.get());
     }
     this->scope.push(node.id, func);
+    curr_function = func;
+    node.compound_stmt.get()->accept(*this);
 }
 
 void CminusBuilder::visit(syntax_param &node) {
@@ -54,7 +55,33 @@ void CminusBuilder::visit(syntax_param &node) {
 }
 
 void CminusBuilder::visit(syntax_compound_stmt &node) {
-    //
+    if (!curr_function) {
+        cerr << "syntax_compound_stmt: no function\n";
+        exit(101);
+    }
+    auto entry = BasicBlock::Create(this->context, "", curr_function);
+    this->builder.SetInsertPoint(entry);
+
+    this->scope.enter();
+    for (auto d : node.local_declarations) {
+        auto decl = d.get();
+        if (decl->num.get()) {
+            // Array
+            auto i32_t = Type::getInt32Ty(this->context);
+            auto type = ArrayType::get(i32_t, decl->num.get()->value);
+            auto val = this->builder.CreateAlloca(type);
+            this->scope.push(decl->id, val);
+        } else {
+            // Int
+            auto i32_t = Type::getInt32Ty(this->context);
+            auto val = this->builder.CreateAlloca(i32_t);
+            this->scope.push(decl->id, val);
+        }
+    }
+
+    // TODO: deal with node.statement_list
+
+    this->scope.exit();
 }
 
 void CminusBuilder::visit(syntax_expresion_stmt &node) {
