@@ -18,7 +18,7 @@
     - 首字母大写
     - 不要写 `Update filename`（具体一点）
 - Log
-    - 记得 `commit` 之前 `pull`，要是忘记了：
+    - 记得 `commit` 之前 `pull`，要是忘记了（假设只需回退一个 commit）：
     ```bash
     git --no-pager log -1  # 记住 hash
     git reset --hard HEAD^
@@ -35,3 +35,14 @@
 2. unique_ptr
 
     使用 `std::unique_ptr::get` 获得指针
+
+## 讨论 2
+- 时间：2019-11-15 下午
+- 地点：西区图书馆
+- 参与者：wrc, yl
+
+1. 把 `syntax_fun_declaration` 和 `syntax_var_declaration` 写完了；
+2. 研究了一下 `Scope` 的用法
+    1. 进入一个 compound statement 时 `enter`，退出时 `exit`；
+    2. 声明变量时将它的 `id` 和 `Value *` `push` 进 scope；
+    3. 寻找 `id` 时使用 `find`。因为 `find` 方法自内而外寻找，所以可以找到正确的 `Value *`。
