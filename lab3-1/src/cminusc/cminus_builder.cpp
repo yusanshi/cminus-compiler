@@ -8,18 +8,21 @@ using namespace std;
 // to store state
 
 void CminusBuilder::visit(syntax_program &node) {
-    //
     for (auto d : node.declarations) {
         d->accept(*this);
     }
 }
 
 void CminusBuilder::visit(syntax_num &node) {
-    //
+    // Not needed
 }
 
 void CminusBuilder::visit(syntax_var_declaration &node) {
-    //
+    auto type = Type::getInt32Ty(this->context);
+    auto gv = new GlobalVariable(*this->module.get(), type, false,
+                                 GlobalValue::LinkageTypes::ExternalLinkage,
+                                 nullptr, node.id);
+    this->scope.push(node.id, gv);
 }
 
 void CminusBuilder::visit(syntax_fun_declaration &node) {
@@ -47,7 +50,7 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
 }
 
 void CminusBuilder::visit(syntax_param &node) {
-    //
+    // Not needed
 }
 
 void CminusBuilder::visit(syntax_compound_stmt &node) {
