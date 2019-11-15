@@ -20,7 +20,7 @@ void CminusBuilder::visit(syntax_num &node) {
 void CminusBuilder::visit(syntax_var_declaration &node) {
     auto type = Type::getInt32Ty(this->context);
     auto gv = new GlobalVariable(*this->module.get(), type, false,
-                                 GlobalValue::LinkageTypes::ExternalLinkage,
+                                 GlobalValue::LinkageTypes::CommonLinkage,
                                  nullptr, node.id);
     this->scope.push(node.id, gv);
 }
