@@ -5,10 +5,11 @@ using namespace llvm;
 using namespace std;
 
 static Function *curr_function = nullptr;
+static Value *curr_expression_value = nullptr;
 
 void CminusBuilder::visit(syntax_program &node) {
     for (auto d : node.declarations) {
-        d->accept(*this);
+        d.get()->accept(*this);
     }
 }
 
@@ -17,10 +18,23 @@ void CminusBuilder::visit(syntax_num &node) {
 }
 
 void CminusBuilder::visit(syntax_var_declaration &node) {
-    auto type = Type::getInt32Ty(this->context);
-    auto gv = new GlobalVariable(*this->module.get(), type, false,
-                                 GlobalValue::LinkageTypes::CommonLinkage,
-                                 nullptr, node.id);
+    GlobalVariable *gv;
+    auto int_type = Type::getInt32Ty(this->context);
+    if (!node.num.get()) {
+        auto int_init = ConstantAggregateZero::get(int_type);
+        gv = new GlobalVariable(*this->module.get(), int_type, false,
+                                GlobalValue::LinkageTypes::CommonLinkage,
+                                int_init, node.id);
+    } else if (node.num.get()->value <= 0) {  // TODO "=0"?
+        cerr << "syntax_var_declaration: array length error!\n";
+        exit(101);
+    } else {
+        auto array_type = ArrayType::get(int_type, node.num.get()->value);
+        auto array_init = ConstantAggregateZero::get(array_type);
+        gv = new GlobalVariable(*this->module.get(), array_type, false,
+                                GlobalValue::LinkageTypes::CommonLinkage,
+                                array_init, node.id);
+    }
     this->scope.push(node.id, gv);
 }
 
@@ -79,13 +93,16 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
         }
     }
 
-    // TODO: deal with node.statement_list
+    // TODO I'm not sure, may be wrong here.
+    for (auto s : node.statement_list) {
+        s.get()->accept(*this);
+    }
 
     this->scope.exit();
 }
 
 void CminusBuilder::visit(syntax_expresion_stmt &node) {
-    //
+    // auto expr = node.expression.get();
 }
 
 void CminusBuilder::visit(syntax_selection_stmt &node) {
