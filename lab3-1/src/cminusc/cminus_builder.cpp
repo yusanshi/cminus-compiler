@@ -140,7 +140,16 @@ void CminusBuilder::visit(syntax_var &node) {
 }
 
 void CminusBuilder::visit(syntax_assign_expression &node) {
-    //
+    node.expression->accept(*this);
+    if (node.var.get()) {
+        auto var_ptr = this->scope.find(node.var->id);
+        if (!var_ptr) {
+            cerr << "Name " << node.var->id << " not found\n";
+            exit(103);
+        }
+        this->builder.CreateStore(curr_expression_value, var_ptr);
+    }
+    // Pass out the curr_expression_value
 }
 
 void CminusBuilder::visit(syntax_simple_expression &node) {
