@@ -4,8 +4,13 @@
 using namespace llvm;
 using namespace std;
 
+#define CONSTi32(num) ConstantInt::get(context, APInt(32, num))
+
 static Function *curr_function = nullptr;
+
 static Value *curr_expression_value = nullptr;
+static Value *curr_factor_value = nullptr;
+static Value *curr_term_value = nullptr;
 
 void CminusBuilder::visit(syntax_program &node) {
     for (auto d : node.declarations) {
@@ -14,7 +19,7 @@ void CminusBuilder::visit(syntax_program &node) {
 }
 
 void CminusBuilder::visit(syntax_num &node) {
-    // Not needed
+    curr_factor_value = CONSTi32(node.value);
 }
 
 void CminusBuilder::visit(syntax_var_declaration &node) {
@@ -92,16 +97,15 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
         }
     }
 
-    // TODO I'm not sure, may be wrong here.
     for (auto s : node.statement_list) {
-        s.get()->accept(*this);
+        s->accept(*this);
     }
 
     this->scope.exit();
 }
 
 void CminusBuilder::visit(syntax_expresion_stmt &node) {
-    // auto expr = node.expression.get();
+    node.expression->accept(*this);
 }
 
 void CminusBuilder::visit(syntax_selection_stmt &node) {
@@ -113,11 +117,26 @@ void CminusBuilder::visit(syntax_iteration_stmt &node) {
 }
 
 void CminusBuilder::visit(syntax_return_stmt &node) {
-    //
+    node.expression->accept(*this);
+    this->builder.CreateRet(curr_expression_value);
+    curr_expression_value = nullptr;
 }
 
 void CminusBuilder::visit(syntax_var &node) {
-    //
+    auto val_ptr = this->scope.find(node.id);
+    if (!val_ptr) {
+        cerr << "Name " << node.id << " not found\n";
+        exit(103);
+    }
+
+    auto val = this->builder.CreateLoad(val_ptr);
+    if (node.expression.get()) {
+        // TODO
+        cerr << "array var not implemented\n";
+        exit(102);
+    }
+
+    curr_factor_value = val;
 }
 
 void CminusBuilder::visit(syntax_assign_expression &node) {
@@ -125,7 +144,26 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
 }
 
 void CminusBuilder::visit(syntax_simple_expression &node) {
-    //
+    auto left_addi = node.additive_expression_l.get();
+
+    if (left_addi->additive_expression.get()) {
+        // TODO
+        cerr << "``add-expr → add-expr addop term'' not implemented\n";
+        exit(102);
+    }
+
+    left_addi->term->accept(*this);
+    auto simp_expr_val = curr_term_value;
+    curr_term_value = nullptr;
+
+    auto right_addi = node.additive_expression_r.get();
+    if (right_addi) {
+        // TODO
+        cerr << "``simple-expr → add-expr relop add-expr'' not implemented\n";
+        exit(102);
+    }
+
+    curr_expression_value = simp_expr_val;
 }
 
 void CminusBuilder::visit(syntax_additive_expression &node) {
@@ -133,7 +171,15 @@ void CminusBuilder::visit(syntax_additive_expression &node) {
 }
 
 void CminusBuilder::visit(syntax_term &node) {
-    //
+    if (node.term.get()) {
+        // TODO
+        cerr << "``term → term mulop factor'' not implemented\n";
+        exit(102);
+    }
+
+    node.factor->accept(*this);
+    curr_term_value = curr_factor_value;
+    curr_factor_value = nullptr;
 }
 
 void CminusBuilder::visit(syntax_call &node) {
