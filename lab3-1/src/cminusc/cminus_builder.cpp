@@ -14,7 +14,7 @@ static Value *curr_term_value = nullptr;
 
 void CminusBuilder::visit(syntax_program &node) {
     for (auto d : node.declarations) {
-        d.get()->accept(*this);
+        d->accept(*this);
     }
 }
 
@@ -30,11 +30,11 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
         gv = new GlobalVariable(*this->module.get(), int_type, false,
                                 GlobalValue::LinkageTypes::CommonLinkage,
                                 int_init, node.id);
-    } else if (node.num.get()->value < 0) {
+    } else if (node.num->value < 0) {
         cerr << "syntax_var_declaration: array length is negative\n";
         exit(101);
     } else {
-        auto array_type = ArrayType::get(int_type, node.num.get()->value);
+        auto array_type = ArrayType::get(int_type, node.num->value);
         auto array_init = ConstantAggregateZero::get(array_type);
         gv = new GlobalVariable(*this->module.get(), array_type, false,
                                 GlobalValue::LinkageTypes::CommonLinkage,
@@ -54,7 +54,7 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
     } else {
         vector<Type *> params;
         for (auto p : node.params) {
-            if (p.get()->isarray) {
+            if (p->isarray) {
                 params.push_back(Type::getInt32PtrTy(this->context));
             } else {
                 params.push_back(Type::getInt32Ty(this->context));
@@ -66,7 +66,7 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
     }
     this->scope.push(node.id, func);
     curr_function = func;
-    node.compound_stmt.get()->accept(*this);
+    node.compound_stmt->accept(*this);
 }
 
 void CminusBuilder::visit(syntax_param &node) {
@@ -87,7 +87,7 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
         auto decl = d.get();
         if (decl->num.get()) {
             // Array
-            auto type = ArrayType::get(i32_t, decl->num.get()->value);
+            auto type = ArrayType::get(i32_t, decl->num->value);
             auto val = this->builder.CreateAlloca(type);
             this->scope.push(decl->id, val);
         } else {
