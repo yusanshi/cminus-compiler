@@ -12,6 +12,12 @@ static Value *curr_expression_value = nullptr;
 static Value *curr_factor_value = nullptr;
 static Value *curr_term_value = nullptr;
 
+// Exit code
+// 101: ?
+// 102: Not implemented.
+// 103: Not found.
+// 104: Return type unmatched.
+
 void CminusBuilder::visit(syntax_program &node) {
     for (auto d : node.declarations) {
         d->accept(*this);
@@ -117,9 +123,26 @@ void CminusBuilder::visit(syntax_iteration_stmt &node) {
 }
 
 void CminusBuilder::visit(syntax_return_stmt &node) {
-    node.expression->accept(*this);
-    this->builder.CreateRet(curr_expression_value);
-    curr_expression_value = nullptr;
+    if (node.expression) {  // return non-void;
+        if (curr_function->getReturnType() == Type::getVoidTy(this->context)) {
+            // Function defined to return void but actually return a non-void
+            // value.
+            cerr << "Void function should not return a value\n";
+            exit(104);
+        } else {
+            node.expression->accept(*this);
+            this->builder.CreateRet(curr_expression_value);
+            curr_expression_value = nullptr;
+        }
+    } else {  // return;
+        if (curr_function->getReturnType() == Type::getVoidTy(this->context)) {
+            this->builder.CreateRetVoid();
+        } else {
+            // Function defined to return int but actually "return;"
+            cerr << "Non-void function should return a value\n";
+            exit(104);
+        }
+    }
 }
 
 void CminusBuilder::visit(syntax_var &node) {
@@ -132,7 +155,7 @@ void CminusBuilder::visit(syntax_var &node) {
     auto val = this->builder.CreateLoad(val_ptr);
     if (node.expression.get()) {
         // TODO
-        cerr << "array var not implemented\n";
+        cerr << "Array var not implemented\n";
         exit(102);
     }
 
