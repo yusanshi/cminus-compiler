@@ -91,11 +91,11 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
         cerr << "syntax_compound_stmt: no function\n";
         exit(101);
     }
-    auto entry = BasicBlock::Create(this->context, "", curr_function);
-    this->builder.SetInsertPoint(entry);
 
     this->scope.enter();
     if (is_outermost_compound) {
+        auto entry = BasicBlock::Create(this->context, "", curr_function);
+        this->builder.SetInsertPoint(entry);
         is_outermost_compound = false;
         int i = 0;
         for (auto it = curr_function->arg_begin();
@@ -138,7 +138,43 @@ void CminusBuilder::visit(syntax_expresion_stmt &node) {
 }
 
 void CminusBuilder::visit(syntax_selection_stmt &node) {
-    //
+    node.expression->accept(*this);
+    auto icmp = this->builder.CreateICmpEQ(curr_expression_value,CONSTi32(0));
+    curr_expression_value = nullptr;
+
+    auto if_true = BasicBlock::Create(this->context, "if.true", curr_function);
+    auto if_end = BasicBlock::Create(this->context, "if.end", curr_function);
+    if (!node.else_statement.get()) {
+        // br cond, true, end
+        // true:
+        // ...
+        // br end
+        // end:
+        this->builder.CreateCondBr(icmp, if_true, if_end);
+        this->builder.SetInsertPoint(if_true);
+        node.if_statement->accept(*this);
+        this->builder.CreateBr(if_end);
+        this->builder.SetInsertPoint(if_end);
+    } else {
+        // br cond, true, false
+        // true:
+        // ...
+        // br end
+        // false:
+        // ...
+        // br end
+        // end:
+        auto if_false =
+            BasicBlock::Create(this->context, "if.false", curr_function);
+        this->builder.CreateCondBr(icmp, if_true, if_false);
+        this->builder.SetInsertPoint(if_true);
+        node.if_statement->accept(*this);
+        this->builder.CreateBr(if_end);
+        this->builder.SetInsertPoint(if_false);
+        node.else_statement->accept(*this);
+        this->builder.CreateBr(if_end);
+        this->builder.SetInsertPoint(if_end);
+    }
 }
 
 void CminusBuilder::visit(syntax_iteration_stmt &node) {
