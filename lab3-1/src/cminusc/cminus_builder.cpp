@@ -109,6 +109,10 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
     }
 
     this->scope.exit();
+
+    auto void_t = Type::getVoidTy(this->context);
+    if (this->scope.in_global() && curr_function->getReturnType() == void_t)
+        this->builder.CreateRetVoid();
 }
 
 void CminusBuilder::visit(syntax_expresion_stmt &node) {
@@ -265,5 +269,25 @@ void CminusBuilder::visit(syntax_term &node) {
 }
 
 void CminusBuilder::visit(syntax_call &node) {
-    //
+    auto call_func = this->scope.find(node.id);
+    if (!call_func) {
+        cerr << "Name " << node.id << " not found\n";
+        exit(103);
+    }
+
+    if (node.args.empty()) {
+        auto ret = this->builder.CreateCall(call_func);
+        curr_factor_value = ret;
+        return;
+    }
+
+    vector<Value *> call_args;
+    for (auto expr : node.args) {
+        expr->accept(*this);
+        call_args.push_back(curr_expression_value);
+        curr_expression_value = nullptr;
+    }
+
+    auto ret = this->builder.CreateCall(call_func, call_args);
+    curr_factor_value = ret;
 }
