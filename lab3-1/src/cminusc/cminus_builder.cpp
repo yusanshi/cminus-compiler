@@ -9,8 +9,7 @@ using namespace std;
 static Function *curr_function = nullptr;
 
 static Value *curr_expression_value = nullptr;
-static Value *curr_addi_left_value = nullptr;
-static Value *curr_addi_right_value = nullptr;
+static Value *curr_addi_value = nullptr;
 static Value *curr_factor_value = nullptr;
 static Value *curr_term_value = nullptr;
 
@@ -179,88 +178,75 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
 
 void CminusBuilder::visit(syntax_simple_expression &node) {
     auto left_addi = node.additive_expression_l.get();
-    left_addi->term->accept(*this);
-    auto term_value = curr_term_value;
-    curr_term_value = nullptr;
-    if (left_addi->additive_expression.get()) {
-        if (left_addi->op == OP_PLUS) {
-            curr_addi_left_value =
-                this->builder.CreateNSWAdd(curr_addi_left_value, term_value);
-        } else if (left_addi->op == OP_MINUS) {
-            curr_addi_left_value =
-                this->builder.CreateNSWSub(curr_addi_left_value, term_value);
-        }
-    } else {
-        curr_addi_left_value = term_value;
-    }
 
-    Value *simp_expr_val;
+    left_addi->accept(*this);
+    auto left_value = curr_addi_value;
+    curr_addi_value = nullptr;
+
     auto right_addi = node.additive_expression_r.get();
-    if (right_addi) {
-        right_addi->term->accept(*this);
-        auto term_value = curr_term_value;
-        curr_term_value = nullptr;
-        if (right_addi->additive_expression.get()) {
-            if (right_addi->op == OP_PLUS) {
-                curr_addi_right_value = this->builder.CreateNSWAdd(
-                    curr_addi_right_value, term_value);
-            } else if (right_addi->op == OP_MINUS) {
-                curr_addi_right_value = this->builder.CreateNSWSub(
-                    curr_addi_right_value, term_value);
-            }
-        } else {
-            curr_addi_right_value = term_value;
-        }
-
-        Value *icmp;
-        switch (node.op) {
-        // <=
-        case OP_LE:
-            icmp = this->builder.CreateICmpSLE(curr_addi_left_value,
-                                               curr_addi_right_value);
-            break;
-        // <
-        case OP_LT:
-            icmp = this->builder.CreateICmpSLT(curr_addi_left_value,
-                                               curr_addi_right_value);
-            break;
-        // >
-        case OP_GT:
-            icmp = this->builder.CreateICmpSGT(curr_addi_left_value,
-                                               curr_addi_right_value);
-            break;
-        // >=
-        case OP_GE:
-            icmp = this->builder.CreateICmpSGE(curr_addi_left_value,
-                                               curr_addi_right_value);
-            break;
-        // ==
-        case OP_EQ:
-            icmp = this->builder.CreateICmpEQ(curr_addi_left_value,
-                                              curr_addi_right_value);
-            break;
-        // !=
-        case OP_NEQ:
-            icmp = this->builder.CreateICmpNE(curr_addi_left_value,
-                                              curr_addi_right_value);
-        }
-        simp_expr_val =
-            this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
-    } else {
-        simp_expr_val = curr_addi_left_value;
+    if (!right_addi) {
+        curr_expression_value = left_value;
+        return;
     }
+
+    right_addi->accept(*this);
+    auto right_value = curr_addi_value;
+    curr_addi_value = nullptr;
+
+    Value *icmp;
+    switch (node.op) {
+    case OP_LE:  // <=
+        icmp = this->builder.CreateICmpSLE(left_value, right_value);
+        break;
+    case OP_LT:  // <
+        icmp = this->builder.CreateICmpSLT(left_value, right_value);
+        break;
+    case OP_GT:  // >
+        icmp = this->builder.CreateICmpSGT(left_value, right_value);
+        break;
+    case OP_GE:  // >=
+        icmp = this->builder.CreateICmpSGE(left_value, right_value);
+        break;
+    case OP_EQ:  // ==
+        icmp = this->builder.CreateICmpEQ(left_value, right_value);
+        break;
+    case OP_NEQ:  // !=
+        icmp = this->builder.CreateICmpNE(left_value, right_value);
+        break;
+    }
+    auto i32_t = Type::getInt32Ty(this->context);
+    auto simp_expr_val = this->builder.CreateZExt(icmp, i32_t);
 
     curr_expression_value = simp_expr_val;
 }
 
 void CminusBuilder::visit(syntax_additive_expression &node) {
-    //
+    node.term->accept(*this);
+    auto term_value = curr_term_value;
+    curr_term_value = nullptr;
+
+    auto expr = node.additive_expression.get();
+    if (!expr) {
+        curr_addi_value = term_value;
+        return;
+    }
+
+    expr->accept(*this);
+    auto addi_value = curr_addi_value;
+    curr_addi_value = nullptr;
+
+    if (node.op == OP_PLUS) {
+        curr_addi_value = this->builder.CreateNSWAdd(addi_value, term_value);
+    } else if (node.op == OP_MINUS) {
+        curr_addi_value = this->builder.CreateNSWSub(addi_value, term_value);
+    }
 }
 
 void CminusBuilder::visit(syntax_term &node) {
     node.factor->accept(*this);
     auto factor_value = curr_factor_value;
     curr_factor_value = nullptr;
+
     if (node.term.get()) {
         node.term->accept(*this);
         if (node.op == OP_MUL) {
