@@ -218,44 +218,34 @@ void CminusBuilder::visit(syntax_simple_expression &node) {
         case OP_LE:
             icmp = this->builder.CreateICmpSLE(curr_addi_left_value,
                                                curr_addi_right_value);
-            simp_expr_val =
-                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
             break;
         // <
         case OP_LT:
             icmp = this->builder.CreateICmpSLT(curr_addi_left_value,
                                                curr_addi_right_value);
-            simp_expr_val =
-                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
             break;
         // >
         case OP_GT:
             icmp = this->builder.CreateICmpSGT(curr_addi_left_value,
                                                curr_addi_right_value);
-            simp_expr_val =
-                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
             break;
         // >=
         case OP_GE:
             icmp = this->builder.CreateICmpSGE(curr_addi_left_value,
                                                curr_addi_right_value);
-            simp_expr_val =
-                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
             break;
         // ==
         case OP_EQ:
             icmp = this->builder.CreateICmpEQ(curr_addi_left_value,
                                               curr_addi_right_value);
-            simp_expr_val =
-                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
             break;
         // !=
         case OP_NEQ:
             icmp = this->builder.CreateICmpNE(curr_addi_left_value,
                                               curr_addi_right_value);
-            simp_expr_val =
-                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
         }
+        simp_expr_val =
+            this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
     } else {
         simp_expr_val = curr_addi_left_value;
     }
