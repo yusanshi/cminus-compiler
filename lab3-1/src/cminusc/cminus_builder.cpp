@@ -9,6 +9,8 @@ using namespace std;
 static Function *curr_function = nullptr;
 
 static Value *curr_expression_value = nullptr;
+static Value *curr_addi_left_value = nullptr;
+static Value *curr_addi_right_value = nullptr;
 static Value *curr_factor_value = nullptr;
 static Value *curr_term_value = nullptr;
 
@@ -177,22 +179,85 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
 
 void CminusBuilder::visit(syntax_simple_expression &node) {
     auto left_addi = node.additive_expression_l.get();
-
+    left_addi->term->accept(*this);
+    auto term_value = curr_term_value;
+    curr_term_value = nullptr;
     if (left_addi->additive_expression.get()) {
-        // TODO
-        cerr << "``add-expr → add-expr addop term'' not implemented\n";
-        exit(102);
+        if (left_addi->op == OP_PLUS) {
+            curr_addi_left_value =
+                this->builder.CreateNSWAdd(curr_addi_left_value, term_value);
+        } else if (left_addi->op == OP_MINUS) {
+            curr_addi_left_value =
+                this->builder.CreateNSWSub(curr_addi_left_value, term_value);
+        }
+    } else {
+        curr_addi_left_value = term_value;
     }
 
-    left_addi->term->accept(*this);
-    auto simp_expr_val = curr_term_value;
-    curr_term_value = nullptr;
-
+    Value *simp_expr_val;
     auto right_addi = node.additive_expression_r.get();
     if (right_addi) {
-        // TODO
-        cerr << "``simple-expr → add-expr relop add-expr'' not implemented\n";
-        exit(102);
+        right_addi->term->accept(*this);
+        auto term_value = curr_term_value;
+        curr_term_value = nullptr;
+        if (right_addi->additive_expression.get()) {
+            if (right_addi->op == OP_PLUS) {
+                curr_addi_right_value = this->builder.CreateNSWAdd(
+                    curr_addi_right_value, term_value);
+            } else if (right_addi->op == OP_MINUS) {
+                curr_addi_right_value = this->builder.CreateNSWSub(
+                    curr_addi_right_value, term_value);
+            }
+        } else {
+            curr_addi_right_value = term_value;
+        }
+
+        Value *icmp;
+        switch (node.op) {
+        // <=
+        case OP_LE:
+            icmp = this->builder.CreateICmpSLE(curr_addi_left_value,
+                                               curr_addi_right_value);
+            simp_expr_val =
+                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
+            break;
+        // <
+        case OP_LT:
+            icmp = this->builder.CreateICmpSLT(curr_addi_left_value,
+                                               curr_addi_right_value);
+            simp_expr_val =
+                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
+            break;
+        // >
+        case OP_GT:
+            icmp = this->builder.CreateICmpSGT(curr_addi_left_value,
+                                               curr_addi_right_value);
+            simp_expr_val =
+                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
+            break;
+        // >=
+        case OP_GE:
+            icmp = this->builder.CreateICmpSGE(curr_addi_left_value,
+                                               curr_addi_right_value);
+            simp_expr_val =
+                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
+            break;
+        // ==
+        case OP_EQ:
+            icmp = this->builder.CreateICmpEQ(curr_addi_left_value,
+                                              curr_addi_right_value);
+            simp_expr_val =
+                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
+            break;
+        // !=
+        case OP_NEQ:
+            icmp = this->builder.CreateICmpNE(curr_addi_left_value,
+                                              curr_addi_right_value);
+            simp_expr_val =
+                this->builder.CreateZExt(icmp, Type::getInt32Ty(this->context));
+        }
+    } else {
+        simp_expr_val = curr_addi_left_value;
     }
 
     curr_expression_value = simp_expr_val;
@@ -204,19 +269,19 @@ void CminusBuilder::visit(syntax_additive_expression &node) {
 
 void CminusBuilder::visit(syntax_term &node) {
     node.factor->accept(*this);
-    auto factor_val = curr_factor_value;
+    auto factor_value = curr_factor_value;
     curr_factor_value = nullptr;
     if (node.term.get()) {
         node.term->accept(*this);
         if (node.op == OP_MUL) {
             curr_term_value =
-                this->builder.CreateNSWMul(curr_term_value, factor_val);
+                this->builder.CreateNSWMul(curr_term_value, factor_value);
         } else if (node.op == OP_DIV) {
             curr_term_value =
-                this->builder.CreateSDiv(curr_term_value, factor_val);
+                this->builder.CreateSDiv(curr_term_value, factor_value);
         }
     } else {
-        curr_term_value = factor_val;
+        curr_term_value = factor_value;
     }
 }
 
