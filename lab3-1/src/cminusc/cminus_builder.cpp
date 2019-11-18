@@ -7,6 +7,8 @@ using namespace std;
 #define CONSTi32(num) ConstantInt::get(context, APInt(32, num))
 
 static Function *curr_function = nullptr;
+static vector<string> curr_func_arg_names;
+static bool is_outermost_compound = false;
 
 static Value *curr_expression_value = nullptr;
 static Value *curr_addi_value = nullptr;
@@ -53,6 +55,7 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
 void CminusBuilder::visit(syntax_fun_declaration &node) {
     auto type = (node.type == TYPE_INT) ? Type::getInt32Ty(this->context)
                                         : Type::getVoidTy(this->context);
+    curr_func_arg_names.clear();
     Function *func;
     if (node.params.empty()) {
         func = Function::Create(FunctionType::get(type, false),
@@ -61,6 +64,7 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
     } else {
         vector<Type *> params;
         for (auto p : node.params) {
+            curr_func_arg_names.push_back(p->id);
             if (p->isarray) {
                 params.push_back(Type::getInt32PtrTy(this->context));
             } else {
@@ -72,6 +76,8 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
                                 node.id, this->module.get());
     }
     this->scope.push(node.id, func);
+
+    is_outermost_compound = true;
     curr_function = func;
     node.compound_stmt->accept(*this);
 }
@@ -89,6 +95,18 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
     this->builder.SetInsertPoint(entry);
 
     this->scope.enter();
+    if (is_outermost_compound) {
+        is_outermost_compound = false;
+        int i = 0;
+        for (auto it = curr_function->arg_begin();
+             it != curr_function->arg_end(); it++, i++) {
+            auto alloc = this->builder.CreateAlloca(it->getType());
+            this->builder.CreateStore(it, alloc);
+            this->scope.push(curr_func_arg_names[i], alloc);
+        }
+        curr_func_arg_names.clear();
+    }
+
     auto i32_t = Type::getInt32Ty(this->context);
     for (auto d : node.local_declarations) {
         auto decl = d.get();
