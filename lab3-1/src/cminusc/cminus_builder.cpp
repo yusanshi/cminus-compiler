@@ -203,15 +203,21 @@ void CminusBuilder::visit(syntax_additive_expression &node) {
 }
 
 void CminusBuilder::visit(syntax_term &node) {
-    if (node.term.get()) {
-        // TODO
-        cerr << "``term → term mulop factor'' not implemented\n";
-        exit(102);
-    }
-
     node.factor->accept(*this);
-    curr_term_value = curr_factor_value;
+    auto factor_val = curr_factor_value;
     curr_factor_value = nullptr;
+    if (node.term.get()) {
+        node.term->accept(*this);
+        if (node.op == OP_MUL) {
+            curr_term_value =
+                this->builder.CreateNSWMul(curr_term_value, factor_val);
+        } else if (node.op == OP_DIV) {
+            curr_term_value =
+                this->builder.CreateSDiv(curr_term_value, factor_val);
+        }
+    } else {
+        curr_term_value = factor_val;
+    }
 }
 
 void CminusBuilder::visit(syntax_call &node) {
