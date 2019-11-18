@@ -173,7 +173,8 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
         }
         this->builder.CreateStore(curr_expression_value, var_ptr);
     }
-    // Pass out the curr_expression_value
+    curr_factor_value = curr_expression_value;
+    // Pass on the curr_expression_value
 }
 
 void CminusBuilder::visit(syntax_simple_expression &node) {
@@ -186,6 +187,7 @@ void CminusBuilder::visit(syntax_simple_expression &node) {
     auto right_addi = node.additive_expression_r.get();
     if (!right_addi) {
         curr_expression_value = left_value;
+        curr_factor_value = left_value;
         return;
     }
 
@@ -218,6 +220,7 @@ void CminusBuilder::visit(syntax_simple_expression &node) {
     auto simp_expr_val = this->builder.CreateZExt(icmp, i32_t);
 
     curr_expression_value = simp_expr_val;
+    curr_factor_value = simp_expr_val;
 }
 
 void CminusBuilder::visit(syntax_additive_expression &node) {
