@@ -16,10 +16,9 @@ static Value *curr_factor_value = nullptr;
 static Value *curr_term_value = nullptr;
 
 // Exit code
-// 101: ?
-// 102: Not implemented.
-// 103: Not found.
-// 104: Return type unmatched.
+// 101: No function.
+// 102: Not found.
+// 103: Return type unmatched.
 
 void CminusBuilder::visit(syntax_program &node) {
     for (auto d : node.declarations) {
@@ -40,8 +39,9 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
                                 GlobalValue::LinkageTypes::CommonLinkage,
                                 int_init, node.id);
     } else if (node.num->value < 0) {
-        cerr << "syntax_var_declaration: array length is negative\n";
-        exit(101);
+        // TODO: not test yet
+        auto neg_idx_except = this->scope.find("neg_idx_except");
+        this->builder.CreateCall(neg_idx_except);
     } else {
         auto array_type = ArrayType::get(int_type, node.num->value);
         auto array_init = ConstantAggregateZero::get(array_type);
@@ -88,7 +88,7 @@ void CminusBuilder::visit(syntax_param &node) {
 
 void CminusBuilder::visit(syntax_compound_stmt &node) {
     if (!curr_function) {
-        cerr << "syntax_compound_stmt: no function\n";
+        cerr << "No function\n";
         exit(101);
     }
 
@@ -211,7 +211,7 @@ void CminusBuilder::visit(syntax_return_stmt &node) {
             // Function defined to return void but actually return a non-void
             // value.
             cerr << "Void function should not return a value\n";
-            exit(104);
+            exit(103);
         } else {
             node.expression->accept(*this);
             this->builder.CreateRet(curr_expression_value);
@@ -223,39 +223,66 @@ void CminusBuilder::visit(syntax_return_stmt &node) {
         } else {
             // Function defined to return int but actually "return;"
             cerr << "Non-void function should return a value\n";
-            exit(104);
+            exit(103);
         }
     }
 }
 
 void CminusBuilder::visit(syntax_var &node) {
-    auto val_ptr = this->scope.find(node.id);
-    if (!val_ptr) {
+    auto var_ptr = this->scope.find(node.id);
+    if (!var_ptr) {
         cerr << "Name " << node.id << " not found\n";
-        exit(103);
-    }
-
-    auto val = this->builder.CreateLoad(val_ptr);
-    if (node.expression.get()) {
-        // TODO
-        cerr << "Array var not implemented\n";
         exit(102);
     }
 
-    curr_factor_value = val;
+    if (node.expression.get()) {
+        node.expression->accept(*this);
+        auto expression_value = curr_expression_value;
+        curr_expression_value = nullptr;
+
+        if (expression_value < 0) {
+            // TODO: not test yet.
+            auto neg_idx_except = this->scope.find("neg_idx_except");
+            this->builder.CreateCall(neg_idx_except);
+        }
+
+        var_ptr = this->builder.CreateInBoundsGEP(var_ptr, expression_value);
+        auto i32_ptr = Type::getInt32PtrTy(this->context);
+        var_ptr = this->builder.CreateBitCast(var_ptr, i32_ptr);
+    }
+    curr_factor_value = this->builder.CreateLoad(var_ptr);
 }
 
 void CminusBuilder::visit(syntax_assign_expression &node) {
     node.expression->accept(*this);
+    auto expression_value_saved = curr_expression_value;
+    curr_expression_value = nullptr;
     if (node.var.get()) {
         auto var_ptr = this->scope.find(node.var->id);
         if (!var_ptr) {
             cerr << "Name " << node.var->id << " not found\n";
-            exit(103);
+            exit(102);
         }
-        this->builder.CreateStore(curr_expression_value, var_ptr);
+        if (node.var->expression.get()) {
+            // TODO: Could this block of code combined with above similar code (line 238-252) ?
+            node.var->expression->accept(*this);
+            auto expression_value = curr_expression_value;
+            curr_expression_value = nullptr;
+
+            if (expression_value < 0) {
+                // TODO: not test yet.
+                auto neg_idx_except = this->scope.find("neg_idx_except");
+                this->builder.CreateCall(neg_idx_except);
+            }
+
+            var_ptr =
+                this->builder.CreateInBoundsGEP(var_ptr, expression_value);
+            auto i32_ptr = Type::getInt32PtrTy(this->context);
+            var_ptr = this->builder.CreateBitCast(var_ptr, i32_ptr);
+        }
+        this->builder.CreateStore(expression_value_saved, var_ptr);
     }
-    curr_factor_value = curr_expression_value;
+    curr_factor_value = expression_value_saved;
     // Pass on the curr_expression_value
 }
 
@@ -350,7 +377,7 @@ void CminusBuilder::visit(syntax_call &node) {
     auto call_func = this->scope.find(node.id);
     if (!call_func) {
         cerr << "Name " << node.id << " not found\n";
-        exit(103);
+        exit(102);
     }
 
     if (node.args.empty()) {
