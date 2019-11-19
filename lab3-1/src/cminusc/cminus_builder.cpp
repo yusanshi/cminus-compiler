@@ -139,7 +139,7 @@ void CminusBuilder::visit(syntax_expresion_stmt &node) {
 
 void CminusBuilder::visit(syntax_selection_stmt &node) {
     node.expression->accept(*this);
-    auto icmp = this->builder.CreateICmpNE(curr_expression_value,CONSTi32(0));
+    auto icmp = this->builder.CreateICmpNE(curr_expression_value, CONSTi32(0));
     curr_expression_value = nullptr;
 
     auto if_true = BasicBlock::Create(this->context, "if.true", curr_function);
@@ -178,7 +178,31 @@ void CminusBuilder::visit(syntax_selection_stmt &node) {
 }
 
 void CminusBuilder::visit(syntax_iteration_stmt &node) {
-    //
+    auto while_judge =
+        BasicBlock::Create(this->context, "while.judge", curr_function);
+    auto while_continue =
+        BasicBlock::Create(this->context, "while.continue", curr_function);
+    auto while_end =
+        BasicBlock::Create(this->context, "while.end", curr_function);
+
+    // br while.judge
+    // while.judge:
+    // ...
+    // br cond while.continue while.end
+    // while.continue:
+    // ...
+    // br while.judge
+    // while.end:
+    this->builder.CreateBr(while_judge);
+    this->builder.SetInsertPoint(while_judge);
+    node.expression->accept(*this);
+    auto icmp = this->builder.CreateICmpNE(curr_expression_value, CONSTi32(0));
+    curr_expression_value = nullptr;
+    this->builder.CreateCondBr(icmp, while_continue, while_end);
+    this->builder.SetInsertPoint(while_continue);
+    node.statement->accept(*this);
+    this->builder.CreateBr(while_judge);
+    this->builder.SetInsertPoint(while_end);
 }
 
 void CminusBuilder::visit(syntax_return_stmt &node) {
