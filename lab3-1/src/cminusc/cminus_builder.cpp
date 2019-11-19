@@ -139,7 +139,7 @@ void CminusBuilder::visit(syntax_expresion_stmt &node) {
 
 void CminusBuilder::visit(syntax_selection_stmt &node) {
     node.expression->accept(*this);
-    auto icmp = this->builder.CreateICmpEQ(curr_expression_value,CONSTi32(0));
+    auto icmp = this->builder.CreateICmpNE(curr_expression_value,CONSTi32(0));
     curr_expression_value = nullptr;
 
     auto if_true = BasicBlock::Create(this->context, "if.true", curr_function);
