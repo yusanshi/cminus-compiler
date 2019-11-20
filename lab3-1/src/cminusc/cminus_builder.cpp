@@ -278,9 +278,8 @@ void CminusBuilder::visit(syntax_var &node) {
         this->builder.CreateBr(neg_idx_end);
         this->builder.SetInsertPoint(neg_idx_end);
 
-        var_ptr = this->builder.CreateInBoundsGEP(var_ptr, expression_value);
-        auto i32_ptr = Type::getInt32PtrTy(this->context);
-        var_ptr = this->builder.CreateBitCast(var_ptr, i32_ptr);
+        var_ptr = this->builder.CreateInBoundsGEP(
+            var_ptr, vector<Value *>{CONSTi32(0), expression_value});
     }
     curr_factor_value = this->builder.CreateLoad(var_ptr);
 }
@@ -314,10 +313,8 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
             this->builder.CreateBr(neg_idx_end);
             this->builder.SetInsertPoint(neg_idx_end);
 
-            var_ptr =
-                this->builder.CreateInBoundsGEP(var_ptr, expression_value);
-            auto i32_ptr = Type::getInt32PtrTy(this->context);
-            var_ptr = this->builder.CreateBitCast(var_ptr, i32_ptr);
+            var_ptr = this->builder.CreateInBoundsGEP(
+                var_ptr, vector<Value *>{CONSTi32(0), expression_value});
         }
         this->builder.CreateStore(expression_value_saved, var_ptr);
     }
