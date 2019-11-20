@@ -322,7 +322,7 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
         this->builder.CreateStore(expression_value_saved, var_ptr);
     }
     curr_factor_value = expression_value_saved;
-    // Pass on the curr_expression_value
+    curr_expression_value = expression_value_saved;
 }
 
 void CminusBuilder::visit(syntax_simple_expression &node) {
