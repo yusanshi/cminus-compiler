@@ -40,8 +40,8 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
                                 GlobalValue::LinkageTypes::CommonLinkage,
                                 int_init, node.id);
     } else if (node.num->value < 0) {
-        auto neg_idx_except = this->scope.find("neg_idx_except");
-        this->builder.CreateCall(neg_idx_except);
+        cerr << "syntax_var_declaration: array length is negative\n";
+        exit(101);
     } else {
         auto array_type = ArrayType::get(int_type, node.num->value);
         auto array_init = ConstantAggregateZero::get(array_type);
