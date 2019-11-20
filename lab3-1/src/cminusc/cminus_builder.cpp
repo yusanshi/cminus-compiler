@@ -140,7 +140,8 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
 }
 
 void CminusBuilder::visit(syntax_expresion_stmt &node) {
-    node.expression->accept(*this);
+    if (node.expression.get())
+        node.expression->accept(*this);
     last_returned = false;
 }
 
