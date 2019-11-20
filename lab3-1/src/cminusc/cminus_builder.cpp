@@ -164,7 +164,8 @@ void CminusBuilder::visit(syntax_selection_stmt &node) {
         this->builder.CreateCondBr(icmp, if_true, if_end);
         this->builder.SetInsertPoint(if_true);
         node.if_statement->accept(*this);
-        this->builder.CreateBr(if_end);
+        if (!last_returned)
+            this->builder.CreateBr(if_end);
         this->builder.SetInsertPoint(if_end);
         last_returned = false;
     } else {
@@ -219,7 +220,8 @@ void CminusBuilder::visit(syntax_iteration_stmt &node) {
     this->builder.CreateCondBr(icmp, while_continue, while_end);
     this->builder.SetInsertPoint(while_continue);
     node.statement->accept(*this);
-    this->builder.CreateBr(while_judge);
+    if (!last_returned)
+        this->builder.CreateBr(while_judge);
     this->builder.SetInsertPoint(while_end);
     last_returned = false;
 }
