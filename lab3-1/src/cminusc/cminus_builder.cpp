@@ -14,7 +14,8 @@ static Value *curr_expression_value = nullptr;
 static Value *curr_addi_value = nullptr;
 static Value *curr_factor_value = nullptr;
 static Value *curr_term_value = nullptr;
-
+static AllocaInst *curr_ret_alloc = nullptr;
+static BasicBlock *curr_ret_basicblock = nullptr;
 // Exit code
 // 101: No function.
 // 102: Not found.
@@ -78,6 +79,10 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
 
     is_outermost_compound = true;
     curr_function = func;
+    // Create Ret BB, but not specify parent function, so will not insert
+    // into function currently.
+    // In the end of `compound_stmt`, we will insert it manually.
+    curr_ret_basicblock = BasicBlock::Create(this->context, "return");
     node.compound_stmt->accept(*this);
 }
 
@@ -91,11 +96,19 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
         exit(101);
     }
 
+    auto i32_t = Type::getInt32Ty(this->context);
+
     this->scope.enter();
     if (is_outermost_compound) {
         auto entry = BasicBlock::Create(this->context, "", curr_function);
         this->builder.SetInsertPoint(entry);
         is_outermost_compound = false;
+
+        if (curr_function->getReturnType() == i32_t) {
+            curr_ret_alloc = this->builder.CreateAlloca(i32_t);
+            this->builder.CreateStore(CONSTi32(0), curr_ret_alloc);
+        }
+
         int i = 0;
         for (auto it = curr_function->arg_begin();
              it != curr_function->arg_end(); it++, i++) {
@@ -106,7 +119,6 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
         curr_func_arg_names.clear();
     }
 
-    auto i32_t = Type::getInt32Ty(this->context);
     for (auto d : node.local_declarations) {
         auto decl = d.get();
         if (decl->num.get()) {
@@ -127,12 +139,17 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
 
     this->scope.exit();
 
-    auto void_t = Type::getVoidTy(this->context);
     if (this->scope.in_global()) {
+        curr_ret_basicblock->insertInto(curr_function);
+        // Add `CreateBr` in case no explicitly jump to return
+        this->builder.CreateBr(curr_ret_basicblock);
+        this->builder.SetInsertPoint(curr_ret_basicblock);
+        auto void_t = Type::getVoidTy(this->context);
         if (curr_function->getReturnType() == void_t) {
             this->builder.CreateRetVoid();
         } else if (curr_function->getReturnType() == i32_t) {
-            this->builder.CreateRet(CONSTi32(0));
+            auto ret_load = this->builder.CreateLoad(curr_ret_alloc,"ret.load");
+            this->builder.CreateRet(ret_load);
         }
     }
 }
@@ -146,16 +163,18 @@ void CminusBuilder::visit(syntax_selection_stmt &node) {
     auto icmp = this->builder.CreateICmpNE(curr_expression_value, CONSTi32(0));
     curr_expression_value = nullptr;
 
+    auto if_true = BasicBlock::Create(this->context, "if.true");
+    auto if_false = BasicBlock::Create(this->context, "if.false");
+    auto if_end = BasicBlock::Create(this->context, "if.end");
+
     if (!node.else_statement.get()) {
         // br cond, true, end
         // true:
         // ...
         // br end
         // end:
-        auto if_true =
-            BasicBlock::Create(this->context, "if.true", curr_function);
-        auto if_end =
-            BasicBlock::Create(this->context, "if.end", curr_function);
+        if_true->insertInto(curr_function);
+        if_end->insertInto(curr_function);
         this->builder.CreateCondBr(icmp, if_true, if_end);
         this->builder.SetInsertPoint(if_true);
         node.if_statement->accept(*this);
@@ -170,12 +189,10 @@ void CminusBuilder::visit(syntax_selection_stmt &node) {
         // ...
         // br end
         // end:
-        auto if_true =
-            BasicBlock::Create(this->context, "if.true", curr_function);
-        auto if_false =
-            BasicBlock::Create(this->context, "if.false", curr_function);
-        auto if_end =
-            BasicBlock::Create(this->context, "if.end", curr_function);
+
+        if_true->insertInto(curr_function);
+        if_false->insertInto(curr_function);
+        if_end->insertInto(curr_function);
         this->builder.CreateCondBr(icmp, if_true, if_false);
         this->builder.SetInsertPoint(if_true);
         node.if_statement->accept(*this);
@@ -224,12 +241,13 @@ void CminusBuilder::visit(syntax_return_stmt &node) {
             exit(103);
         } else {
             node.expression->accept(*this);
-            this->builder.CreateRet(curr_expression_value);
+            this->builder.CreateStore(curr_expression_value, curr_ret_alloc);
+            this->builder.CreateBr(curr_ret_basicblock);
             curr_expression_value = nullptr;
         }
     } else {  // return;
         if (curr_function->getReturnType() == Type::getVoidTy(this->context)) {
-            this->builder.CreateRetVoid();
+            this->builder.CreateBr(curr_ret_basicblock);
         } else {
             // Function defined to return int but actually "return;"
             cerr << "Non-void function should return a value\n";
