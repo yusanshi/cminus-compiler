@@ -128,8 +128,13 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
     this->scope.exit();
 
     auto void_t = Type::getVoidTy(this->context);
-    if (this->scope.in_global() && curr_function->getReturnType() == void_t)
-        this->builder.CreateRetVoid();
+    if (this->scope.in_global()) {
+        if (curr_function->getReturnType() == void_t) {
+            this->builder.CreateRetVoid();
+        } else if (curr_function->getReturnType() == i32_t) {
+            this->builder.CreateRet(CONSTi32(0));
+        }
+    }
 }
 
 void CminusBuilder::visit(syntax_expresion_stmt &node) {
