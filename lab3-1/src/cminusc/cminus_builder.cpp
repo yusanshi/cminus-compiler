@@ -39,7 +39,6 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
                                 GlobalValue::LinkageTypes::CommonLinkage,
                                 int_init, node.id);
     } else if (node.num->value < 0) {
-        // TODO: not test yet
         auto neg_idx_except = this->scope.find("neg_idx_except");
         this->builder.CreateCall(neg_idx_except);
     } else {
@@ -240,11 +239,20 @@ void CminusBuilder::visit(syntax_var &node) {
         auto expression_value = curr_expression_value;
         curr_expression_value = nullptr;
 
-        if (expression_value < 0) {
-            // TODO: not test yet.
-            auto neg_idx_except = this->scope.find("neg_idx_except");
-            this->builder.CreateCall(neg_idx_except);
-        }
+        // Runtime negative index check
+        // (But why need we do this while stanard C implementation does not?
+        // I think add selection here is UGLY.)
+        auto icmp = this->builder.CreateICmpSLT(expression_value, CONSTi32(0));
+        auto neg_idx_true =
+            BasicBlock::Create(this->context, "neg.idx.true", curr_function);
+        auto neg_idx_end =
+            BasicBlock::Create(this->context, "neg.idx.end", curr_function);
+        this->builder.CreateCondBr(icmp, neg_idx_true, neg_idx_end);
+        this->builder.SetInsertPoint(neg_idx_true);
+        auto neg_idx_except = this->scope.find("neg_idx_except");
+        this->builder.CreateCall(neg_idx_except);
+        this->builder.CreateBr(neg_idx_end);
+        this->builder.SetInsertPoint(neg_idx_end);
 
         var_ptr = this->builder.CreateInBoundsGEP(var_ptr, expression_value);
         auto i32_ptr = Type::getInt32PtrTy(this->context);
@@ -264,16 +272,23 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
             exit(102);
         }
         if (node.var->expression.get()) {
-            // TODO: Could this block of code combined with above similar code (line 238-252) ?
+            // TODO: Could this block of code combined with above similar code
             node.var->expression->accept(*this);
             auto expression_value = curr_expression_value;
             curr_expression_value = nullptr;
 
-            if (expression_value < 0) {
-                // TODO: not test yet.
-                auto neg_idx_except = this->scope.find("neg_idx_except");
-                this->builder.CreateCall(neg_idx_except);
-            }
+            auto icmp =
+                this->builder.CreateICmpSLT(expression_value, CONSTi32(0));
+            auto neg_idx_true = BasicBlock::Create(
+                this->context, "neg.idx.true", curr_function);
+            auto neg_idx_end =
+                BasicBlock::Create(this->context, "neg.idx.end", curr_function);
+            this->builder.CreateCondBr(icmp, neg_idx_true, neg_idx_end);
+            this->builder.SetInsertPoint(neg_idx_true);
+            auto neg_idx_except = this->scope.find("neg_idx_except");
+            this->builder.CreateCall(neg_idx_except);
+            this->builder.CreateBr(neg_idx_end);
+            this->builder.SetInsertPoint(neg_idx_end);
 
             var_ptr =
                 this->builder.CreateInBoundsGEP(var_ptr, expression_value);
