@@ -146,14 +146,16 @@ void CminusBuilder::visit(syntax_selection_stmt &node) {
     auto icmp = this->builder.CreateICmpNE(curr_expression_value, CONSTi32(0));
     curr_expression_value = nullptr;
 
-    auto if_true = BasicBlock::Create(this->context, "if.true", curr_function);
-    auto if_end = BasicBlock::Create(this->context, "if.end", curr_function);
     if (!node.else_statement.get()) {
         // br cond, true, end
         // true:
         // ...
         // br end
         // end:
+        auto if_true =
+            BasicBlock::Create(this->context, "if.true", curr_function);
+        auto if_end =
+            BasicBlock::Create(this->context, "if.end", curr_function);
         this->builder.CreateCondBr(icmp, if_true, if_end);
         this->builder.SetInsertPoint(if_true);
         node.if_statement->accept(*this);
@@ -168,8 +170,12 @@ void CminusBuilder::visit(syntax_selection_stmt &node) {
         // ...
         // br end
         // end:
+        auto if_true =
+            BasicBlock::Create(this->context, "if.true", curr_function);
         auto if_false =
             BasicBlock::Create(this->context, "if.false", curr_function);
+        auto if_end =
+            BasicBlock::Create(this->context, "if.end", curr_function);
         this->builder.CreateCondBr(icmp, if_true, if_false);
         this->builder.SetInsertPoint(if_true);
         node.if_statement->accept(*this);
