@@ -1,0 +1,12 @@
+/* -*- c -*-
+
+   The "foo" function here has two arguments named "a".
+
+ */
+
+void foo(int a, int a) {}
+
+int main(void) {
+    foo(1, 2);
+    return 0;
+}

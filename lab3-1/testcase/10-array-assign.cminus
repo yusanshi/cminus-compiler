@@ -1,0 +1,7 @@
+void main(void) {
+    int b[20];
+    int i;
+
+    b[0] = 21;
+    output(b[0]);
+}
