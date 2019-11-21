@@ -185,15 +185,17 @@ void CminusBuilder::visit(syntax_selection_stmt &node) {
         this->builder.SetInsertPoint(if_true);
         node.if_statement->accept(*this);
         auto then_returned = last_returned;
+        if (!then_returned)
+            this->builder.CreateBr(if_end);
         this->builder.SetInsertPoint(if_false);
         node.else_statement->accept(*this);
         auto else_returned = last_returned;
+        if (!else_returned)
+            this->builder.CreateBr(if_end);
         this->builder.SetInsertPoint(if_end);
         last_returned = then_returned && else_returned;
         if (!last_returned) {
             if_end->insertInto(curr_function);
-            this->builder.CreateBr(if_end);
-            this->builder.CreateBr(if_end);
         }
     }
 }
