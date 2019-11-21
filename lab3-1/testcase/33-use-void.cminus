@@ -1,0 +1,15 @@
+/* -*- c -*-
+
+   Trying to use a void value in an expression
+
+*/
+
+void f(int x) {
+    return;
+}
+
+int main(void) {
+    int a;
+    a = f(2) + 1;
+    return 0;
+}

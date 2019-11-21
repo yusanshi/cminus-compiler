@@ -1,0 +1,13 @@
+int main(void) {
+    int a;
+    int b;
+    a = input();
+    b = input();
+    while (a > 0) {
+        a = a - 1;
+        b = b + 1;
+    }
+    output(a);
+    output(b);
+    return a + b - a * b + b * b / 2;
+}
