@@ -10,6 +10,7 @@ static Function *curr_function = nullptr;
 static vector<string> curr_func_arg_names;
 static bool is_outermost_compound = false;
 static bool last_returned = false;
+static bool is_passing_array = false;
 
 static Value *curr_expression_value = nullptr;
 static Value *curr_addi_value = nullptr;
@@ -260,31 +261,35 @@ void CminusBuilder::visit(syntax_var &node) {
         cerr << "Name " << node.id << " not found\n";
         exit(102);
     }
+    if (is_passing_array) {
+        curr_factor_value = var_ptr;
+    } else {
+        if (node.expression.get()) {
+            node.expression->accept(*this);
+            auto expression_value = curr_expression_value;
+            curr_expression_value = nullptr;
 
-    if (node.expression.get()) {
-        node.expression->accept(*this);
-        auto expression_value = curr_expression_value;
-        curr_expression_value = nullptr;
+            // Runtime negative index check
+            // (But why need we do this while stanard C implementation does not?
+            // I think add selection here is UGLY.)
+            auto icmp =
+                this->builder.CreateICmpSLT(expression_value, CONSTi32(0));
+            auto neg_idx_true = BasicBlock::Create(
+                this->context, "neg.idx.true", curr_function);
+            auto neg_idx_end =
+                BasicBlock::Create(this->context, "neg.idx.end", curr_function);
+            this->builder.CreateCondBr(icmp, neg_idx_true, neg_idx_end);
+            this->builder.SetInsertPoint(neg_idx_true);
+            auto neg_idx_except = this->scope.find("neg_idx_except");
+            this->builder.CreateCall(neg_idx_except);
+            this->builder.CreateBr(neg_idx_end);
+            this->builder.SetInsertPoint(neg_idx_end);
 
-        // Runtime negative index check
-        // (But why need we do this while stanard C implementation does not?
-        // I think add selection here is UGLY.)
-        auto icmp = this->builder.CreateICmpSLT(expression_value, CONSTi32(0));
-        auto neg_idx_true =
-            BasicBlock::Create(this->context, "neg.idx.true", curr_function);
-        auto neg_idx_end =
-            BasicBlock::Create(this->context, "neg.idx.end", curr_function);
-        this->builder.CreateCondBr(icmp, neg_idx_true, neg_idx_end);
-        this->builder.SetInsertPoint(neg_idx_true);
-        auto neg_idx_except = this->scope.find("neg_idx_except");
-        this->builder.CreateCall(neg_idx_except);
-        this->builder.CreateBr(neg_idx_end);
-        this->builder.SetInsertPoint(neg_idx_end);
-
-        var_ptr = this->builder.CreateInBoundsGEP(
-            var_ptr, vector<Value *>{CONSTi32(0), expression_value});
+            var_ptr = this->builder.CreateInBoundsGEP(
+                var_ptr, vector<Value *>{CONSTi32(0), expression_value});
+        }
+        curr_factor_value = this->builder.CreateLoad(var_ptr);
     }
-    curr_factor_value = this->builder.CreateLoad(var_ptr);
 }
 
 void CminusBuilder::visit(syntax_assign_expression &node) {
@@ -413,7 +418,7 @@ void CminusBuilder::visit(syntax_term &node) {
 }
 
 void CminusBuilder::visit(syntax_call &node) {
-    auto call_func = this->scope.find(node.id);
+    Function *call_func = cast<Function>(this->scope.find(node.id));
     if (!call_func) {
         cerr << "Name " << node.id << " not found\n";
         exit(102);
@@ -426,9 +431,24 @@ void CminusBuilder::visit(syntax_call &node) {
     }
 
     vector<Value *> call_args;
-    for (auto expr : node.args) {
-        expr->accept(*this);
-        call_args.push_back(curr_expression_value);
+    for (auto i = 0; i < node.args.size(); i++) {
+        auto arg = call_func->arg_begin() + i;
+        if (arg->getType() == Type::getInt32PtrTy(this->context)) {
+            // In order to judge whether current arg is array,
+            // My strategy here is to query call_func's arg
+            // So compiler don't know whether user is passing
+            // a non-ptr value to a ptr parameter
+            is_passing_array = true;
+        }
+        node.args[i]->accept(*this);
+        if (is_passing_array) {
+            call_args.push_back(this->builder.CreateInBoundsGEP(
+                curr_expression_value,
+                vector<Value *>{CONSTi32(0), CONSTi32(0)}));
+            is_passing_array = false;
+        } else {
+            call_args.push_back(curr_expression_value);
+        }
         curr_expression_value = nullptr;
     }
 
