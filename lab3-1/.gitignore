@@ -1,5 +1,6 @@
 analyzer/lexical_analyzer.l
 analyzer/syntax_analyzer.y
-testcase/
+testcase/*
+!testcase/*.cminus
 build/*
 .ycm_extra_conf.py

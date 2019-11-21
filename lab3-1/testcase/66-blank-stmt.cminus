@@ -1,0 +1,14 @@
+int main(void) {
+    int a;
+    int b;
+    a = input();
+    b = input();
+    if (a > 0) {
+
+    } else {
+
+    }
+    output(a);
+    output(b);
+    return a + b - a * b + b * b / 2;
+}
