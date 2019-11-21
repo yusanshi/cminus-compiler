@@ -58,3 +58,4 @@
 2. `if` 语句对应的 basic block 顺序问题；
     - 调整 `BasicBlock::Create` 的顺序（solved in `42bc749`）。
 3. 如何编译在 `if.end` 后没有 statement 的程序；
+    - 使用全局变量 `last_return` 跟踪一个 statement 的最后一句是否是返回，如果 if 语句两个分支的最后一句都已经返回就不再 `br` 到 `if.end` 了。
