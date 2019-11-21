@@ -20,6 +20,7 @@ static Value *curr_term_value = nullptr;
 // 101: No function.
 // 102: Not found.
 // 103: Return type unmatched.
+// 104: Length of declared array is negative.
 
 void CminusBuilder::visit(syntax_program &node) {
     for (auto d : node.declarations) {
@@ -41,7 +42,7 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
                                 int_init, node.id);
     } else if (node.num->value < 0) {
         cerr << "syntax_var_declaration: array length is negative\n";
-        exit(101);
+        exit(104);
     } else {
         auto array_type = ArrayType::get(int_type, node.num->value);
         auto array_init = ConstantAggregateZero::get(array_type);
