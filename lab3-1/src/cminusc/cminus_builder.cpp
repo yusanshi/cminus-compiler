@@ -285,8 +285,16 @@ void CminusBuilder::visit(syntax_var &node) {
             this->builder.CreateBr(neg_idx_end);
             this->builder.SetInsertPoint(neg_idx_end);
 
-            var_ptr = this->builder.CreateInBoundsGEP(
-                var_ptr, vector<Value *>{CONSTi32(0), expression_value});
+            auto i32p_t = Type::getInt32PtrTy(this->context);
+            auto i32pp_t = i32p_t->getPointerTo();
+            if (var_ptr->getType() == i32pp_t) {
+                var_ptr = this->builder.CreateLoad(i32p_t, var_ptr);
+                var_ptr =
+                    this->builder.CreateInBoundsGEP(var_ptr, expression_value);
+            } else {
+                var_ptr = this->builder.CreateInBoundsGEP(
+                    var_ptr, vector<Value *>{CONSTi32(0), expression_value});
+            }
         }
         curr_factor_value = this->builder.CreateLoad(var_ptr);
     }
@@ -321,8 +329,16 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
             this->builder.CreateBr(neg_idx_end);
             this->builder.SetInsertPoint(neg_idx_end);
 
-            var_ptr = this->builder.CreateInBoundsGEP(
-                var_ptr, vector<Value *>{CONSTi32(0), expression_value});
+            auto i32p_t = Type::getInt32PtrTy(this->context);
+            auto i32pp_t = i32p_t->getPointerTo();
+            if (var_ptr->getType() == i32pp_t) {
+                var_ptr = this->builder.CreateLoad(i32p_t, var_ptr);
+                var_ptr =
+                    this->builder.CreateInBoundsGEP(var_ptr, expression_value);
+            } else {
+                var_ptr = this->builder.CreateInBoundsGEP(
+                    var_ptr, vector<Value *>{CONSTi32(0), expression_value});
+            }
         }
         this->builder.CreateStore(expression_value_saved, var_ptr);
     }
@@ -431,7 +447,7 @@ void CminusBuilder::visit(syntax_call &node) {
     }
 
     vector<Value *> call_args;
-    for (auto i = 0; i < node.args.size(); i++) {
+    for (auto i = 0ul; i < node.args.size(); i++) {
         auto arg = call_func->arg_begin() + i;
         if (arg->getType() == Type::getInt32PtrTy(this->context)) {
             // In order to judge whether current arg is array,
