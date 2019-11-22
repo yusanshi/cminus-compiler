@@ -1,7 +1,0 @@
-int add(int a[]) {
-    return a[0];
-}
-int main(void) {
-    int a[10];
-    return add(a);
-}

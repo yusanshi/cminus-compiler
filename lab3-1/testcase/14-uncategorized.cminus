@@ -26,13 +26,12 @@ void main(void) {
     a = 5;
 
     while (a) {
-        int a;
         int arr[10];
         int intArray[5];
         int level;
         level = 2;
+        a = a - 1;
 
-        a = 1;
         intArray[0] = 2;
 
         arr[intArray[0]] = helloworld(a);
