@@ -311,7 +311,6 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
             exit(102);
         }
         if (node.var->expression.get()) {
-            // TODO: Could this block of code combined with above similar code
             node.var->expression->accept(*this);
             auto expression_value = curr_expression_value;
             curr_expression_value = nullptr;
