@@ -446,6 +446,8 @@ void CminusBuilder::visit(syntax_call &node) {
         return;
     }
 
+    auto i32p_t = Type::getInt32PtrTy(this->context);
+    auto i32pp_t = i32p_t->getPointerTo();
     vector<Value *> call_args;
     for (auto i = 0ul; i < node.args.size(); i++) {
         auto arg = call_func->arg_begin() + i;
@@ -458,9 +460,15 @@ void CminusBuilder::visit(syntax_call &node) {
         }
         node.args[i]->accept(*this);
         if (is_passing_array) {
-            call_args.push_back(this->builder.CreateInBoundsGEP(
-                curr_expression_value,
-                vector<Value *>{CONSTi32(0), CONSTi32(0)}));
+            if (curr_expression_value->getType() == i32pp_t) {
+                auto val = this->builder.CreateLoad(curr_expression_value);
+                call_args.push_back(val);
+            } else {
+                auto val = this->builder.CreateInBoundsGEP(
+                    curr_expression_value,
+                    vector<Value *>{CONSTi32(0), CONSTi32(0)});
+                call_args.push_back(val);
+            }
             is_passing_array = false;
         } else {
             call_args.push_back(curr_expression_value);
