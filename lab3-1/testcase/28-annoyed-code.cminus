@@ -1,6 +1,7 @@
 void main(void) {
     int a;
     int arr[2];
+    a = 0;
     while (a) {
         int a;
         while (a) {
