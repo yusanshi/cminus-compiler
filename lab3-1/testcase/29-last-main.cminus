@@ -5,5 +5,7 @@ void main(void) {
 }
 
 void funcTwo(void) {}
-int funcThree(void) {}
+int funcThree(void) {
+    return 0;
+}
 void funcFour(int a, int arr[]) {}

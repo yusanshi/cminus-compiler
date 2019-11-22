@@ -7,6 +7,11 @@ int array[20];
 int foo(int i, int j) {
     int a;
     int b[20];
+    return 0;
 }
 
-int bar(void) {}
+int bar(void) {
+    return 0;
+}
+
+void main(void) {}
