@@ -22,7 +22,7 @@ out_path() {
 get_input() {
     local input_cnt=$(grep -c "input()" $1)
     for ((i=0; i<$input_cnt; i++)); do
-        echo $(($RANDOM%10))
+        echo $(($RANDOM%100))
     done
 }
 

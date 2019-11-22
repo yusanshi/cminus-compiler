@@ -35,7 +35,7 @@ void main(void) {
     int tc;
     int i;
     ans = 987651345;
-    N = input();
+    N = 4;
     i = 0;
     while (i < N) {
         X[i] = input();
@@ -46,3 +46,20 @@ void main(void) {
     output(ans);
     return;
 }
+
+/*
+input();
+input();
+input();
+input();
+input();
+input();
+input();
+input();
+input();
+input();
+input();
+input();
+input();
+input();
+*/
