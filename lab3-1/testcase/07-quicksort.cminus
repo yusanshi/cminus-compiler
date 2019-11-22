@@ -1,71 +1,51 @@
-int a[5];
-int globals;
-
-void quicksort(int a[], int left, int right) {
-    int localvala;
+void quicksort(int number[], int first, int last) {
     int i;
     int j;
-    int key;
+    int pivot;
     int temp;
-    if (left < right) {
-        int localvalb;
-        i = left;
-        j = right;
-        key = a[left];
+
+    if (first < last) {
+        pivot = first;
+        i = first;
+        j = last;
+
         while (i < j) {
-            int localvalc;
-            while (a[i] < key) {
+            while ((number[i] <= number[pivot]) + (i < last) == 2) {
                 i = i + 1;
             }
-            while (a[j] > key) {
+            while (number[j] > number[pivot]) {
                 j = j - 1;
             }
             if (i < j) {
-                temp = a[i];
-                a[j] = a[i];
-                a[i] = temp;
-                localvalc = localvalc + 1;
+                temp = number[i];
+                number[i] = number[j];
+                number[j] = temp;
             }
         }
-        temp = a[left];
-        a[left] = a[j];
-        a[j] = temp;
-        quicksort(a, left, j - 1);
-        quicksort(a, j + 1, right);
+
+        temp = number[pivot];
+        number[pivot] = number[j];
+        number[j] = temp;
+        quicksort(number, first, j - 1);
+        quicksort(number, j + 1, last);
     }
 }
-int mid(int tem) {
-    int j;
-    int temp;
-    temp = 0;
-    /* for (j = 0; j < tem; j++) { */
-    /*   temp = temp + j; */
-    /* } */
-    return temp;
-}
 
-int mida(int num, int i) {
-    int result;
-    int j;
-    if (i > 4) {
-        result = mid(i);
-    } /* else { */
-    /*   for (j = 0; j < i ; j++) { */
-    /*     result = (result * j) + num; */
-    /*   } */
-    /* } */
-    return result;
-}
-
-void main(void) {
+int main(void) {
     int i;
-    int num;
-
+    int number[25];
     i = 0;
-    num = 5;
-    while (i < num) {
-        a[i] = mida(num, i);
+    while (i < 25) {
+        number[i] = 25 - i;
         i = i + 1;
     }
-    output(quicksort(a, 0, num - 1));
+
+    quicksort(number, 0, 24);
+
+    i = 0;
+    while (i < 25) {
+        output(number[i]);
+        i = i + 1;
+    }
+    return 0;
 }
