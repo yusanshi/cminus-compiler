@@ -11,7 +11,7 @@ int main(void) {
     int n;
     int i;
     i = 0;
-    n = input();
+    n = 4;
     while (i <= n) {
         output(fib(i));
         i = i + 1;
