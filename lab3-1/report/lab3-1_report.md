@@ -7,9 +7,31 @@
 使用 LLVM 将 C- 的语法树翻译为 LLVM IR。
 
 ## 实验设计
+### 全局变量
+由于 `visit` 函数没有其它参数和返回值，所以只好使用全局变量返回表达式的值和传递参数。以下为我们使用的全局变量。
+```cpp
+// 传给各种 statement 的参数
+static Function *curr_function = nullptr;   // 用于创建 basic block 时指明函数
+static bool is_outermost_compound = false;  // 指明是否是函数定义中的 compound statement
+//   传给 compound statement 的参数
+static vector<string> curr_func_arg_names;  // 若是函数定义中的 compound statement，
+                                            // 则需要将参数名 push 进 scope
+
+// 各种 statement 的返回值，表示此 statement 的最后一句是否一定返回，详见实验难点部分
+static bool last_returned = false;
+
+// 传给 var 的参数，表示当前是否正在分析 call 且要传数组参数，详见实验难点部分
+static bool is_passing_array = false;
+
+// 返回表达式（的部分）的值，见下
+static Value *curr_expression_value = nullptr;
+static Value *curr_addi_value = nullptr;
+static Value *curr_factor_value = nullptr;
+static Value *curr_term_value = nullptr;
+```
 
 ### expression（汪若辰）
-由于 `visit` 没有返回值，所以只好使用全局变量返回表达式的 `Value *`。在分析完一个表达式（的部分）后将对应的全局变量设置为它的 `Value *`，然后调用 `visit` 的函数就可以通过全局变量获得表达式的值了。表达式的组成从小到大是 factor, term, additive-expression 和 expression，我们就对应地设置了四个全局变量。其实应该是不需要对每个类型都设置一个全局变量的，但是既然已经写成这样了，就不想再改了，分开的话看起来也比较清晰。
+表达式的组成从小到大是 factor, term, additive-expression 和 expression，我们就对应地设置了四个全局变量，使用全局变量返回表达式的 `Value *`。在分析完一个表达式（的部分）后将对应的全局变量设置为它的 `Value *`，然后调用 `visit` 的函数就可以通过全局变量获得表达式的值了。其实应该是不需要对每个类型都设置一个全局变量的，但是既然已经写成这样了，就不想再改了，分开的话看起来也比较清晰。
 
 factor 和 expression 的分析方法和其他的有一点不同。以 factor 为例，由于 factor 有四种，在分析 term 的时候 accept 这个 factor 会根据类型自动地选择四种 factor 的 visit 函数，所以在 num, call, expression 和 var 分析完后需要将全局变量 `curr_factor_value` 设置成它的 value。
 
@@ -147,9 +169,9 @@ Run 34 tests, 0 fails.
 - 在写测试脚本的时候了解了 `trap` 的用法。
 
 ## 实验反馈
-1. 无需全局变量
+1. 可以不使用全局变量
 
-    我们发现全局变量只是用于传递参数或者返回值，如果可以修改 `visit` 的返回值和参数的话完全可以避免使用全局变量。使用全局变量还是会导致一些不容易发现的 bug 的。比如在 [`f1d5d7a`] 中修复的 bug，在分析完一个 expression 的时候可能会忘记设置对应的全局变量，从而对应的值没有被传出来。（~~不过 C++ 要写多个返回值也挺麻烦的~~）
+    我们发现全局变量只是用于传递参数或者返回值，如果可以修改 `visit`、`accept` 的返回值和参数的话可以避免使用全局变量。使用全局变量还是会导致一些不容易发现的 bug 的。比如在 [`f1d5d7a`] 中修复的 bug，在分析完一个 expression 的时候可能会忘记设置对应的全局变量，从而对应的值没有被传出来。（~~不过 C++ 要写多个返回值也挺麻烦的~~）
 
 2. `enum class`
 
