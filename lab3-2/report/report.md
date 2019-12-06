@@ -1,16 +1,117 @@
 # lab3-2实验报告
+汪若辰 PB17000098
 
-小组成员 姓名 学号
+余磊 PB17051053
 
 ## 实验要求
 
-请按照自己的理解，写明本次实验需要干什么
+学习了解 LLVM PASS 的作用，观察使用 opt 工具利用指定 PASS 对代码优化的过程，通过阅读源代码分析 PASS 的运行原理。
 
 ## 报告内容 
 
-按要求说明选择的Pass和进行相关任务的回答
+### DCE
+
+#### 类型和作用
+
+是一种 Transform Pass，它其实是 Dead Inst Elimination 和 Dead Code Elimination 的结合，前者将代码扫描一遍，优化掉明显是死代码的部分，后者在每消除一条死指令之前，会尝试将它的每个操作数清空，对由此新产生的死指令循环调用消除过程。
+
+#### 示例
+
+举例如下。
+```c
+int main(void) {
+    5 / 2;
+    return 0;
+}
+```
+这一段非常简单的程序中的 `5 / 2;` 是死代码，因为它的运算结果 2 并没有被使用到。
+
+为它手动构造 IR。
+```llvm
+define i32 @main() {
+  %1 = sdiv i32 5, 2
+  ret i32 0
+}
+```
+
+使用 opt 工具对其进行优化：`opt test.ll -print-after-all -print-before-all -dce -S`，输出如下。
+```
+*** IR Dump Before Dead Code Elimination ***
+define i32 @main() {
+  %1 = sdiv i32 5, 2
+  ret i32 0
+}
+*** IR Dump After Dead Code Elimination ***
+define i32 @main() {
+  ret i32 0
+}
+*** IR Dump Before Module Verifier ***
+define i32 @main() {
+  ret i32 0
+}
+*** IR Dump After Module Verifier ***
+define i32 @main() {
+  ret i32 0
+}
+; ModuleID = 'test.ll'
+source_filename = "test.ll"
+
+define i32 @main() {
+  ret i32 0
+}
+```
+可以看到，Dead Code Elimination 消除了代码中多余的 `%2 = sdiv i32 5, 2`，它们正是程序中的死代码，而（我们并没有显式指定的）Module Verifier 为代码加上了 `ModuleID` 和 `source_filename` 信息。
+
+为说明 DCE 的工作流程，再举一例。
+```c
+int main(void) {
+    int a;
+    a = 4;
+    a - 2;
+    return 0;
+}
+```
+
+手动构造 IR 结果如下。
+```llvm
+define i32 @main() {
+  %1 = alloca i32
+  store i32 4, i32* %1
+  %2 = load i32, i32* %1
+  %3 = sub nsw i32 %2, 2
+  ret i32 0
+}
+```
+
+使用相同命令，得到最后的优化结果。
+```
+define i32 @main() {
+  %1 = alloca i32
+  store i32 4, i32* %1
+  ret i32 0
+}
+```
+
+可以看到，DCE 把 `load` 和 `sub` 的两个指令一并优化掉了。显然，如果 DCE 的逻辑仅仅是优化掉其结果没有被使用的指令而且“一遍过”，那么 `%3 = sub nsw i32 %2, 2` 被优化是预料之中，但是 `%2 = load i32, i32* %1` 被优化掉就无法解释了。其实，“一遍过”正是 Dead Inst Elimination 做的事情，而 Dead Code Elimination 出了对代码扫描一遍，还利用 `WorkList` 实现了一个简单的循环优化的过程，我将在下一部分详细介绍这个过程。
+
+#### 概述
+
+分析 DCE 这个 PASS 所在的代码 `lib/Transforms/Scalar/DCE.cpp`。
+
+这个文件内其实包含两个 PASS：`llvm::createDeadInstEliminationPass()` 会返回 `DeadInstElimination()`，`llvm::createDeadCodeEliminationPass()` 会返回 `DCELegacyPass()`。
+
+先来介绍“一遍过”的 `DeadInstElimination()`。它有成员函数 `bool runOnBasicBlock(BasicBlock &BB)`，其返回值表示是否对当前基本块做了修改，对于基本块的每个指令 `Inst`，调用 `isInstructionTriviallyDead(Inst, TLI)`，若其返回值为 `true`（指令的结果未被使用，且指令没有副作用），则使用 `Inst->eraseFromParent();` 将其从当前基本块中删除，同时更新作为 Flag 的 `Changed` 变量。
+
+再来介绍相比 `DeadInstElimination()` 更彻底的 `DCELegacyPass()`。它有成员函数 `bool runOnFunction(Function &F)`，这个成员函数先做了一些初始化操作，再调用 `eliminateDeadCode()`，这个函数的返回值同样表示是否有做修改，即是否有做死指令消除。在 `eliminateDeadCode()` 内，先是一个初始的“一遍过”过程：对每个指令调用 `DCEInstruction()`，`DCEInstruction()` 函数特别的地方在于它维护了一个 `WorkList`，如果判断一条指令已经是明显的死指令，它不会立即将其删除，而是尝试把它的每个操作数清空，查看以“被清空的那个操作数”作为结果的指令是否变成了死指令，如是，就将它加入到 `WorkList`。接下来，是一个循环过程：只要 `WorkList` 不为空，就对其中的指令调用 `DCEInstruction()`。
+
+`WorkList` 的存在和循环消除的精妙之处在于，它们的存在大大降低了消除“链式死指令”的开销。对于 `%2 = %1; %3 = %2; ...... %n = %(n-1);` 这样的“链式死指令”，不把 `%n = %(n-1);` 消除往往就发现不了前面的死指令，因为看起来前面指令的运算结果在后面要被用到。如果采用 `DeadInstElimination()` 这种“一遍过”操作，要想把这样的“链式死指令”全部消除的话，往往就要不断进行“一遍过”，直到某一遍没有指令被消除为止，显然，这么做的成本非常大，而 `WorkList` 显然相对完美地解决了这个问题。
+
 
 ### ADCE
+
+#### 类型和作用
+也是一种 Transform Pass，这里的"A"指的是"Aggressive"，即激进的死代码消除。它的基本运行逻辑是，它假设每条指令都是多余的，除非之后的分析能证明它是有用的。如果把 DCE 看成黑名单机制，那么 ADCE 就是白名单机制：只有被证明确实有用的代码才会保留下来。
+
 #### 示例
 给出一个带有死代码的例子：
 ```llvm
