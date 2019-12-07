@@ -172,13 +172,13 @@ bool AggressiveDeadCodeElimination::performDeadCodeElimination() {
 - 此指令和已知 live 指令存在 D-U 链；
 - 或会影响已知 live 指令是否执行的指令（control dependent，在函数 `markLiveBranchesFromControlDependences` 中）。
 
-每标记一个 live 指令都将它加入 WorkList，处理完之后将它移除。不停地循环直到没有需要处理的 live 指令。
+每标记一个 live 指令都将它加入 WorkList，处理完之后将它移除。不停地循环直到 WorkList 中没有需要处理的 live 指令。
 
 #### `removeDeadInstructions`
-1. 先执行函数 `updateDeadRegions` <!--。此函数会移除有 dead terminator 的 dead region。-->
-    - 对每一个有 dead terminator 的 basic block，先找到一个离函数出口最近的后继（根据反向控制流图的后序遍历结果判断）
-    - 将这个 basic block branch 到找到的后继
-    - 对 post dominator tree 进行相应的更新
+1. 先执行函数 `updateDeadRegions`
+    1. 对每一个有 dead terminator 的 basic block，先找到一个离函数出口最近的后继（根据反向控制流图的后序遍历结果判断）
+    2. 将这个 basic block branch 到找到的后继
+    3. 对 post dominator tree 进行相应的更新
 2. 剩下没有被标记为 live 的指令都是没有副作用、不影响控制流且不影响返回值的指令，使用 `dropAllReferences` 和 `eraseFromParent` 删除。
 
 ## 实验总结
