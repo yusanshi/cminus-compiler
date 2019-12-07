@@ -5,7 +5,7 @@
 
 ## 实验要求
 
-学习了解 LLVM PASS 的作用，观察使用 opt 工具利用指定 PASS 对代码优化的过程，通过阅读源代码分析 PASS 的运行原理。
+学习了解 LLVM PASS 的作用，观察使用 `opt` 工具利用指定 PASS 对代码优化的过程，通过阅读源代码分析 PASS 的运行原理。
 
 ## 报告内容 
 
@@ -34,7 +34,7 @@ define i32 @main() {
 }
 ```
 
-使用 opt 工具对其进行优化：`opt test.ll -print-after-all -print-before-all -dce -S`，输出如下。
+使用 `opt` 工具对其进行优化：`opt test.ll -print-after-all -print-before-all -dce -S`，输出如下。
 ```
 *** IR Dump Before Dead Code Elimination ***
 define i32 @main() {
@@ -183,8 +183,13 @@ bool AggressiveDeadCodeElimination::performDeadCodeElimination() {
 
 ## 实验总结
 
-此次实验有什么收获
+- 学会了利用 `opt` 工具观察特定 PASS 对代码优化的过程；
+
+- 通过阅读 `lib/Transforms/Scalar/` 内的代码，大致了解了 LLVM PASS 对中间代码优化的思路和流程；
+
+- 大大加深了对死代码消除的理解（我们选择的两个 PASS 都和死代码消除相关）。
+
 
 ## 实验反馈
 
-对本次实验的建议（可选 不会评分）
+无。
