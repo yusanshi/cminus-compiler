@@ -108,9 +108,8 @@ define i32 @main() {
 
 
 ### ADCE
-
 #### 类型和作用
-也是一种 Transform Pass，这里的"A"指的是"Aggressive"，即激进的死代码消除。它的基本运行逻辑是，它假设每条指令都是多余的，除非之后的分析能证明它是有用的。如果把 DCE 看成黑名单机制，那么 ADCE 就是白名单机制：只有被证明确实有用的代码才会保留下来。
+也是一种 Transform Pass，这里的「A」指的是「Aggressive」，即激进的死代码消除。它的基本运行逻辑是，它假设每条指令都是多余的，除非之后的分析能证明它是有用的。如果把 DCE 看成黑名单机制，那么 ADCE 就是白名单机制：只有被证明确实有用的代码才会保留下来。
 
 #### 示例
 给出一个带有死代码的例子：
@@ -148,7 +147,7 @@ return:                                           ; preds = %loop
 ```
 
 #### 概述
-ADCE 的思路为首先假定所有的指令都是死的，然后排除活指令，再删除剩下的死指令。主要有三个步骤：
+ADCE 也利用了一个指令的 WorkList。主要有三个步骤：
 ```cpp
 bool AggressiveDeadCodeElimination::performDeadCodeElimination() {
     this->initialize();
@@ -159,25 +158,28 @@ bool AggressiveDeadCodeElimination::performDeadCodeElimination() {
 
 #### `initialize`
 1. 对 block 和 instruction 收集一些有用的信息，如 terminator 的信息；
-2. 先标记一批「live」（即一定不能删除）的指令和 basic block：
+2. 先标记一批「live」（即一定不能删除）的指令和 basic block 并将对应的指令或 basic block 的非条件跳转指令加入 WorkList。判断标准：
     - 使用函数 `isAlwaysLive`
         - 可能有副作用的指令 （`mayHaveSideEffects`）
         - basic block 的一部分 terminator（不属于 branch 和 switch 的 terminator）
     - 循环中回边指向的 basic block
     - 从此 basic block 无法到达函数的返回指令（FIXME）
     - entry block
-3. 标记没有 live terminator 的 basic block。
+3. 标记没有 live terminator 的 basic block，在之后的 `markLiveBranchesFromControlDependences` 中要用到。
 
 #### `markLiveInstructions`
-根据已知的 live 指令向前标记其它的 live 指令：
+根据已知的 live 指令向前标记其它的 live 指令。标记指令如果：
 - 此指令和已知 live 指令存在 D-U 链；
-- 会影响已知 live 指令是否执行的指令；
-- 不停地循环直到没有需要处理的已知 live 指令。
+- 或会影响已知 live 指令是否执行的指令（control dependent，在函数 `markLiveBranchesFromControlDependences` 中）。
+
+每标记一个 live 指令都将它加入 WorkList，处理完之后将它移除。不停地循环直到没有需要处理的 live 指令。
 
 #### `removeDeadInstructions`
-TODO：`updateDeadRegions`
-
-剩下没有被标记为 live 的指令都是没有副作用、不影响控制流且不影响返回值的指令，所以可以删除。
+1. 先执行函数 `updateDeadRegions` <!--。此函数会移除有 dead terminator 的 dead region。-->
+    - 对每一个有 dead terminator 的 basic block，先找到一个离函数出口最近的后继（根据反向控制流图的后序遍历结果判断）
+    - 将这个 basic block branch 到找到的后继
+    - 对 post dominator tree 进行相应的更新
+2. 剩下没有被标记为 live 的指令都是没有副作用、不影响控制流且不影响返回值的指令，使用 `dropAllReferences` 和 `eraseFromParent` 删除。
 
 ## 实验总结
 
