@@ -60,7 +60,7 @@ define i32 @main() {
   ret i32 0
 }
 ```
-可以看到，Dead Code Elimination 消除了代码中多余的 `%2 = sdiv i32 5, 2`，它们正是程序中的死代码，而（我们并没有显式指定的）Module Verifier 为代码加上了 `ModuleID` 和 `source_filename` 信息。
+可以看到，Dead Code Elimination 消除了代码中多余的 `%2 = sdiv i32 5, 2`，它正是程序中的死代码，而（我们并没有显式指定的）Module Verifier 为代码加上了 `ModuleID` 和 `source_filename` 信息。
 
 为说明 DCE 的工作流程，再举一例。
 ```c
