@@ -5,7 +5,7 @@
 
 ## 实验要求
 
-学习了解 LLVM PASS 的作用，观察使用 `opt` 工具利用指定 PASS 对代码优化的过程，通过阅读源代码分析 PASS 的运行原理。
+学习了解 LLVM Pass 的作用，观察使用 `opt` 工具利用指定 Pass 对代码优化的过程，通过阅读源代码分析 Pass 的运行原理。
 
 ## 报告内容 
 
@@ -62,7 +62,7 @@ define i32 @main() {
 ```
 可以看到，Dead Code Elimination 消除了代码中多余的 `%2 = sdiv i32 5, 2`，它正是程序中的死代码，而（我们并没有显式指定的）Module Verifier 为代码加上了 `ModuleID` 和 `source_filename` 信息。
 
-为说明 DCE 的工作流程，再举一例。
+为说明 `dce` 的工作流程，再举一例。
 ```c
 int main(void) {
     int a;
@@ -92,13 +92,13 @@ define i32 @main() {
 }
 ```
 
-可以看到，DCE 把 `load` 和 `sub` 的两个指令一并优化掉了。显然，如果 DCE 的逻辑仅仅是优化掉其结果没有被使用的指令而且“一遍过”，那么 `%3 = sub nsw i32 %2, 2` 被优化是预料之中，但是 `%2 = load i32, i32* %1` 被优化掉就无法解释了。其实，“一遍过”正是 Dead Inst Elimination 做的事情，而 Dead Code Elimination 出了对代码扫描一遍，还利用 `WorkList` 实现了一个简单的循环优化的过程，我将在下一部分详细介绍这个过程。
+可以看到，`dce` 把 `load` 和 `sub` 的两个指令一并优化掉了。显然，如果 `dce` 的逻辑仅仅是优化掉其结果没有被使用的指令而且“一遍过”，那么 `%3 = sub nsw i32 %2, 2` 被优化是预料之中，但是 `%2 = load i32, i32* %1` 被优化掉就无法解释了。其实，“一遍过”正是 Dead Inst Elimination 做的事情，而 Dead Code Elimination 出了对代码扫描一遍，还利用 `WorkList` 实现了一个简单的循环优化的过程，我将在下一部分详细介绍这个过程。
 
 #### 概述
 
-分析 DCE 这个 PASS 所在的代码 `lib/Transforms/Scalar/DCE.cpp`。
+分析 `dce` 这个 Pass 所在的代码 `lib/Transforms/Scalar/DCE.cpp`。
 
-这个文件内其实包含两个 PASS：`llvm::createDeadInstEliminationPass()` 会返回 `DeadInstElimination()`，`llvm::createDeadCodeEliminationPass()` 会返回 `DCELegacyPass()`。
+这个文件内其实包含两个 Pass：`llvm::createDeadInstEliminationPass()` 会返回 `DeadInstElimination()`，`llvm::createDeadCodeEliminationPass()` 会返回 `DCELegacyPass()`。
 
 先来介绍“一遍过”的 `DeadInstElimination()`。它有成员函数 `bool runOnBasicBlock(BasicBlock &BB)`，其返回值表示是否对当前基本块做了修改，对于基本块的每个指令 `Inst`，调用 `isInstructionTriviallyDead(Inst, TLI)`，若其返回值为 `true`（指令的结果未被使用，且指令没有副作用），则使用 `Inst->eraseFromParent();` 将其从当前基本块中删除，同时更新作为 Flag 的 `Changed` 变量。
 
@@ -109,11 +109,11 @@ define i32 @main() {
 
 ### ADCE
 #### 类型和作用
-也是一种 Transform Pass，这里的「A」指的是「Aggressive」，即激进的死代码消除。它的基本运行逻辑是，它假设每条指令都是多余的，除非之后的分析能证明它是有用的。如果把 DCE 看成黑名单机制，那么 ADCE 就是白名单机制：只有被证明确实有用的代码才会保留下来。
+也是一种 Transform Pass，这里的「A」指的是「Aggressive」，即激进的死代码消除。它的基本运行逻辑是，它假设每条指令都是多余的，除非之后的分析能证明它是有用的。如果把 `dce` 看成黑名单机制，那么 `adce` 就是白名单机制：只有被证明确实有用的代码才会保留下来。
 
 #### 示例
 
-我们将给出来一个 DCE 不能消除死代码的例子。
+我们将给出来一个 `dce` 不能消除死代码的例子。
 
 对于下面这个简单的程序：
 
@@ -165,7 +165,7 @@ return:                                           ; preds = %loop
 ```
 
 #### 概述
-ADCE 也利用了一个指令的 WorkList。主要有三个步骤：
+`adce` 也利用了一个指令的 WorkList。主要有三个步骤：
 ```cpp
 bool AggressiveDeadCodeElimination::performDeadCodeElimination() {
     this->initialize();
@@ -201,11 +201,11 @@ bool AggressiveDeadCodeElimination::performDeadCodeElimination() {
 
 ## 实验总结
 
-- 学会了利用 `opt` 工具观察特定 PASS 对代码优化的过程；
+- 学会了利用 `opt` 工具观察特定 Pass 对代码优化的过程；
 
-- 通过阅读 `lib/Transforms/Scalar/` 内的代码，大致了解了 LLVM PASS 对中间代码优化的思路和流程；
+- 通过阅读 `lib/Transforms/Scalar/` 内的代码，大致了解了 LLVM Pass 对中间代码优化的思路和流程；
 
-- 大大加深了对死代码消除的理解（我们选择的两个 PASS 都和死代码消除相关）。
+- 大大加深了对死代码消除的理解（我们选择的两个 Pass 都和死代码消除相关）。
 
 
 ## 实验反馈
