@@ -158,12 +158,12 @@ bool AggressiveDeadCodeElimination::performDeadCodeElimination() {
 
 #### `initialize`
 1. 对 block 和 instruction 收集一些有用的信息，如 terminator 的信息；
-2. 先标记一批「live」（即一定不能删除）的指令和 basic block 并将对应的指令或 basic block 的非条件跳转指令加入 WorkList。判断标准：
+2. 先标记一批「live」指令和 basic block 并将对应的指令或 basic block 的非条件跳转指令加入 WorkList。判断标准：
     - 使用函数 `isAlwaysLive`
         - 可能有副作用的指令 （`mayHaveSideEffects`）
         - basic block 的一部分 terminator（不属于 branch 和 switch 的 terminator）
     - 循环中回边指向的 basic block
-    - 从此 basic block 无法到达函数的返回指令（FIXME）
+    - 从此 basic block 无法到达函数的返回指令，做法是从 post dominator tree 中不是返回指令的根开始向上搜索，标记搜索到的指令
     - entry block
 3. 标记没有 live terminator 的 basic block，在之后的 `markLiveBranchesFromControlDependences` 中要用到。
 
