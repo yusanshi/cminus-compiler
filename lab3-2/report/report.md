@@ -84,7 +84,7 @@ define i32 @main() {
 ```
 
 使用相同命令，得到最后的优化结果。
-```
+```llvm
 define i32 @main() {
   %1 = alloca i32
   store i32 4, i32* %1
@@ -119,12 +119,11 @@ define i32 @main() {
 
 ```c
 int main(void) {
-    int i;
-    i = 1;
-    while (i < 10) {
-        i = i + 1;
+    int j = 1;
+    while (j < 10) {
+        j = j + 1;
     }
-    return i;
+    return j;
 }
 ```
 我们使用 LLVM 的 `phi` 指令手动构造一段和原程序逻辑相同的 IR 代码，并添加了 `%i1` 和 `%i2` 这两个多余的量：
@@ -153,13 +152,13 @@ define i32 @main() {
 entry:
   br label %loop
 
-loop:                                             ; preds = %loop, %entry
+loop:
   %j1 = phi i32 [ 1, %entry ], [ %j2, %loop ]
   %j2 = add i32 %j1, 1
   %cmp = icmp slt i32 %j2, 10
   br i1 %cmp, label %loop, label %return
 
-return:                                           ; preds = %loop
+return:
   ret i32 %j2
 }
 ```
