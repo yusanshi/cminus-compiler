@@ -9,11 +9,17 @@
 
 ## 报告内容 
 ### 1. RISC-V 机器代码的生成和运行
-- LLVM 8.0.1 适配 RISC-V
+- LLVM 8.0.1 适配 RISC-V 并安装 spike 模拟器
 
-- lab3-0 gcd 样例 LLVM IR 生成 RISC-V 源码的过程
+    ...
 
-- 安装 Spike 模拟器并运行上述生成的 RISC-V 源码
+    或者如果使用的 Linux 发行版是 Arch 系的话，可以直接使用 `pacman` 安装 `riscv64-linux-gnu-gcc` 和 `spike` 并安装 AUR 中的 `riscv-pk-git`。
+
+- 将 gcd 样例编译到 RISC-V 汇编
+
+- 汇编上述生成的 RISC-V 汇编并利用 spike 执行
+
+写一个简单的 [Makefile](../test/Makefile) 来自动化编译和运行的过程。例如在编译 `gcd.c` 时使用 `make gcd`，运行时 `make run gcd`。省去自己打命令的麻烦。
 
 
 ### 2. LLVM 源码阅读与理解
