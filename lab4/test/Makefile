@@ -4,11 +4,7 @@ CFLAGS := -static
 LLCFLAGS := -march=riscv64
 CLANGFLAGS := -S -emit-llvm --target=riscv64 -march=rv64gc
 
-ifeq (clean,$(firstword $(MAKECMDGOALS)))
-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  $(eval $(RUN_ARGS):;@:)
-endif
-ifeq (run,$(firstword $(MAKECMDGOALS)))
+ifneq (,$(filter $(firstword $(MAKECMDGOALS)), clean run))
   RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   $(eval $(RUN_ARGS):;@:)
 endif
