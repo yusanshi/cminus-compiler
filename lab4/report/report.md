@@ -30,7 +30,7 @@ cmake -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=RISCV -DLLVM_TARGETS_TO_BUILD=X86 ../
 make -j2
 ```
 
-![](https://img.yusanshi.com/upload/20191213180326868569.png)
+![LLVM compile done](https://img.yusanshi.com/upload/20191213180326868569.png)
 
 #### 配置 riscv-gnu-toolchain
 
@@ -38,10 +38,10 @@ make -j2
 # https://github.com/riscv/riscv-gnu-toolchain
 
 cd ~/temp
-# export http_proxy=...
-# export https_proxy=...
 git clone --recursive https://github.com/riscv/riscv-gnu-toolchain && cd riscv-gnu-toolchain
-sudo apt install autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev
+sudo apt install autoconf automake autotools-dev curl libmpc-dev \
+        libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo \
+        gperf libtool patchutils bc zlib1g-dev libexpat-dev
 
 # 选择了 /opt/riscv 作为安装路径
 ./configure --prefix=/opt/riscv
@@ -51,8 +51,8 @@ sudo make
 sudo make linux
 echo 'export PATH=/opt/riscv/bin:$PATH' >> ~/.bashrc 
 ```
-![](https://img.yusanshi.com/upload/20191213223200815880.png)
-![](https://img.yusanshi.com/upload/20191213212838651213.png)
+![contents of /opt/riscv/bin](https://img.yusanshi.com/upload/20191213223200815880.png)
+![riscv-gnu-toolcain compile done](https://img.yusanshi.com/upload/20191213212838651213.png)
 
 #### 配置 RISC-V Proxy Kernel
 
@@ -67,7 +67,7 @@ make
 sudo make install
 ```
 
-![](https://img.yusanshi.com/upload/20191213225056487894.png)
+![riscv pk compile done](https://img.yusanshi.com/upload/20191213225056487894.png)
 
 #### 配置 Spike
 
@@ -83,7 +83,7 @@ make # 此处有循环依赖报错：make: Circular libsoftfloat.so <- libsoftfl
 sudo make install
 ```
 
-![](https://img.yusanshi.com/upload/20191213230131230821.png)
+![spike compile done](https://img.yusanshi.com/upload/20191213230131230821.png)
 
 
 > 或者如果使用的 Linux 发行版是 Arch 系的话，可以直接使用 `pacman` 安装 `riscv64-linux-gnu-gcc` 和 `spike` 并安装 AUR 中的 `riscv-pk-git`。
@@ -106,6 +106,9 @@ riscv64-unknown-elf-gcc -o gcd_v2.riscv gcd.c
 ```
 
 其中方案一生成的 IR 表示 `gcd.ll` 如下，注意到开头有 `target triple = "riscv64"`，表示目标机器架构为 RISC-V。
+
+<details>
+<summary>gcd.ll</summary>
 
 ```llvm
 ; ModuleID = 'gcd.c'
@@ -187,8 +190,12 @@ attributes #0 = { noinline nounwind optnone "correctly-rounded-divide-sqrt-fp-ma
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{!"clang version 8.0.1 (tags/RELEASE_801/final)"}
 ```
+</details>
 
 生成的汇编文件 `gcd.s` 如下。
+
+<details>
+<summary>gcd.s</summary>
 
 ```assembly
 	.text
@@ -279,6 +286,7 @@ main:                                   # @main
 	.ident	"clang version 8.0.1 (tags/RELEASE_801/final)"
 	.section	".note.GNU-stack","",@progbits
 ```
+</details>
 
 #### 运行程序
 
