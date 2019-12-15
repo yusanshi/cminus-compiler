@@ -333,12 +333,29 @@ bbl loader
 
 - `calcSpillCost` 函数的执行流程？
 
+    此函数返回在一个指令中将一个寄存器及其重名寄存器（例如 x86 中的 ax 和 eax 就为「重名的」寄存器）存至内存中以腾出空间的代价。
+    - 如果此寄存器已经在本指令中用到，则不应该再分配它，返回「无穷大」代价（`unsigned` 最大值）；
+    - 如果此寄存器没有被 disabled（此时可以被分配），则根据它的状态返回代价
+        - 如果是 free，则代价为 0；
+        - 如果 reserved，则代价为「无穷大」；
+        - 如果是其它，找到和它对应的虚拟寄存器，根据它是否 dirty 确定代价。
+    - 如果此寄存器被 disabled，则检查所有和它重名的寄存器，将重名寄存器的代价想加为此寄存器的代价。
+
 - `hasTiedOps`，`hasPartialRedefs`，`hasEarlyClobbers` 变量的作用？
 
 #### 书上算法与 LLVM 的实现之间的不同点
 
 
 ## 组内讨论内容
+### 讨论 1
+- 时间：2019-12-13 下午
+- 地点：西区图书馆
+- 参与者：wrc, yl
+![discuss 1](figs/discuss.jpg)
+
+分工
+- yl 完成配置环境并运行 RISC-V 程序的部分和 `allocateInstruction` 函数有关部分；
+- wrc 完成 `calcSpillCost` 函数部分和龙书的部分。
 
 ## 实验总结
 
