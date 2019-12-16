@@ -339,7 +339,7 @@ bbl loader
         - 如果是 free，则代价为 0；
         - 如果 reserved，则代价为「无穷大」；
         - 如果是其它，找到和它对应的虚拟寄存器，根据它是否 dirty 确定代价。
-    - 如果此寄存器被 disabled，则检查所有和它重名的寄存器，将重名寄存器的代价想加为此寄存器的代价。
+    - 如果此寄存器被 disabled，则检查所有和它重名的寄存器，将重名寄存器的代价相加为此寄存器的代价。
 
 - `hasTiedOps`，`hasPartialRedefs`，`hasEarlyClobbers` 变量的作用？
 
