@@ -327,7 +327,7 @@ bbl loader
 
 ### 2. LLVM 源码阅读与理解
 #### `RegAllocFast.cpp` 中的问题
-- `RegAllocFast` 的执行流程？
+- `RegAllocFast` 的执行流程？  
     `RegAllocFast` 是一个 Pass，它继承自 `MachineFunctionPass`，它通过重载 `runOnMachineFunction` 函数来发挥自己的功能。
     在它的 `runOnMachineFunction` 方法中，先是进行一系列初始化操作（主要是获取各类信息），然后开始执行自己的核心操作：映射虚拟寄存器到物理寄存器。为了完成这样的目标，它先初始化虚拟寄存器到物理寄存器的映射表，即把每个虚拟寄存器都先映射到空值，接着，对函数中的每个 BasicBlock 调用 `allocateBasicBlock` 函数，使得所有的操作数和相关引用里的虚拟寄存器都被替换成物理寄存器，从而完成自己的使命，最后，虚拟寄存器已经失去了作用，将和它们相关的量都清空即可。
 
@@ -337,10 +337,10 @@ bbl loader
 - `allocateInstruction` 函数有几次扫描过程以及每一次扫描的功能？
     
     有 4 次扫描过程，每一遍的功能分别如下。
-        - 第一遍：在当前指令的操作数中，为处于 use 状态的操作数标记上将使用物理寄存器，为在 early clobber list 中的操作数给物理寄存器标记上 free 或 reserved 的状态；计算 `hasTiedOps`, `hasEarlyClobbers` 和 `hasPartialRedefs` 这几个标志量；处理几种需要在 use 状态和 define 状态被分配到同一寄存器的情形；
-        - 第二遍：为 defined 且处于 use 状态的虚拟寄存器分配物理寄存器；为 undefined 的操作数分配寄存器；如果当前指令是函数调用，把所有虚拟寄存器都 spill 到内存；
-        - 第三遍：为处于 define 状态的物理寄存器标记状态为 free 或 reserved；
-        - 第四遍：为处于 define 状态的虚拟寄存器分配物理寄存器；kill 掉死的处于 define 状态的虚拟寄存器。
+    - 第一遍：在当前指令的操作数中，为处于 use 状态的操作数标记上将使用物理寄存器，为在 early clobber list 中的操作数给物理寄存器标记上 free 或 reserved 的状态；计算 `hasTiedOps`, `hasEarlyClobbers` 和 `hasPartialRedefs` 这几个标志量；处理几种需要在 use 状态和 define 状态被分配到同一寄存器的情形；
+    - 第二遍：为 defined 且处于 use 状态的虚拟寄存器分配物理寄存器；为 undefined 的操作数分配寄存器；如果当前指令是函数调用，把所有虚拟寄存器都 spill 到内存；
+    - 第三遍：为处于 define 状态的物理寄存器标记状态为 free 或 reserved；
+    - 第四遍：为处于 define 状态的虚拟寄存器分配物理寄存器；kill 掉死的处于 define 状态的虚拟寄存器。
 
 
 - `calcSpillCost` 函数的执行流程？
