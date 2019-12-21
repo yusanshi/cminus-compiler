@@ -374,7 +374,8 @@ bbl loader
 
 ## 实验总结
 
-此次实验有什么收获
+- 学会了如何在 x86 平台下为 C 程序生成 RISC-V 架构的汇编文件和可执行程序，并使用 Spike 模拟执行；
+- 学习了常见的寄存器分配算法，通过阅读 `RegAllocFast.cpp` 了解了作为 LLVM Debug 版本默认算法的 Fast 寄存器分配算法的基本工作原理。
 
 ## 实验反馈
 - 怎么又把 PDF 文件放到仓库里面了（gbxu/notice_board#177）
