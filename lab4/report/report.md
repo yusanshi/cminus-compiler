@@ -337,8 +337,8 @@ bbl loader
 - `allocateInstruction` 函数有几次扫描过程以及每一次扫描的功能？
     
     有 4 次扫描过程，每一遍的功能分别如下。
-    - 第一遍：在当前指令的操作数中，为处于 use 状态的操作数标记上将使用物理寄存器，为在 early clobber list 中的操作数给物理寄存器标记上 free 或 reserved 的状态；计算 `hasTiedOps`, `hasEarlyClobbers` 和 `hasPartialRedefs` 这几个标志量；处理几种需要在 use 状态和 define 状态被分配到同一寄存器的情形；
-    - 第二遍：为 defined 且处于 use 状态的虚拟寄存器分配物理寄存器；为 undefined 的操作数分配寄存器；如果当前指令是函数调用，把所有虚拟寄存器都 spill 到内存；
+    - 第一遍：计算 `hasTiedOps`, `hasEarlyClobbers` 和 `hasPartialRedefs` 这几个标志量；为处于 use 状态的操作数标记上将使用物理寄存器，为在 early clobber list 中的操作数给物理寄存器标记上 free 或 reserved 的状态；处理几种需要在 use 状态和 define 状态被分配到同一寄存器的情形；
+    - 第二遍：为 defined 且处于 use 状态的虚拟寄存器分配物理寄存器；为 undefined 但处于 use 状态的虚拟寄存器分配寄存器；如果当前指令是函数调用，把所有虚拟寄存器都 spill 到内存；
     - 第三遍：为处于 define 状态的物理寄存器标记状态为 free 或 reserved；
     - 第四遍：为处于 define 状态的虚拟寄存器分配物理寄存器；kill 掉死的处于 define 状态的虚拟寄存器。
 
