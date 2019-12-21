@@ -331,16 +331,16 @@ bbl loader
     `RegAllocFast` 是一个 Pass，它继承自 `MachineFunctionPass`，它通过重载 `runOnMachineFunction` 函数来发挥自己的功能。
     在它的 `runOnMachineFunction` 方法中，先是进行一系列初始化操作（主要是获取各类信息），然后开始执行自己的核心操作：映射虚拟寄存器到物理寄存器。为了完成这样的目标，它先初始化虚拟寄存器到物理寄存器的映射表，即把每个虚拟寄存器都先映射到空值，接着，对函数中的每个 BasicBlock 调用 `allocateBasicBlock` 函数，使得所有的操作数和相关引用里的虚拟寄存器都被替换成物理寄存器，从而完成自己的使命，最后，虚拟寄存器已经失去了作用，将和它们相关的量都清空即可。
 
-    下面来说一下 `allocateBasicBlock` 函数，它的作用是为一个基本块中的所有虚拟寄存器分配物理寄存器。在这个函数内，先检查是否还有虚拟寄存器到物理寄存器的映射，如果有，说明为前一个 BasicBlock 执行此函数后映射表没有完全清空，是不正常状态。接着，对当前 BasicBlock 的入口处的活跃寄存器（即活跃变量所对应的虚拟寄存器），（TODO），然后，对 BasicBlock 中的每条指令调用 `allocateInstruction` 函数（这一部分将在下个问题介绍），之后，再把在当前 BasicBlock 出口处活跃的虚拟寄存器 spill 到内存中，最后，从当前 BasicBlock 中消除由于合并操作导致的无用的指令（合并后多个变量分配到同一个物理寄存器，因此 move 指令变得多余）。
+    下面来说一下 `allocateBasicBlock` 函数，它的作用是为一个基本块中的所有虚拟寄存器分配物理寄存器。在这个函数内，先把目标机器的物理寄存器都标记为 disabled 状态，再检查是否还有虚拟寄存器到物理寄存器的映射，如果有，说明为前一个 BasicBlock 执行此函数后映射表没有完全清空，是不正常状态。接着，对当前 BasicBlock 的入口处的活跃寄存器（即活跃变量所对应的虚拟寄存器）保留物理寄存器，然后，对 BasicBlock 中的每条指令调用 `allocateInstruction` 函数（这一部分将在下个问题介绍），之后，再把所有被使用（存储着到虚拟寄存器的映射）的物理寄存器全部 spill 到内存中（看起来没必要全部 spill，可能只是为了 debug 吧），最后，从当前 BasicBlock 中消除由于合并操作导致的无用的指令（合并后多个变量分配到同一个物理寄存器，因此 move 指令变得多余）。
 
 
 - `allocateInstruction` 函数有几次扫描过程以及每一次扫描的功能？
     
     有 4 次扫描过程，每一遍的功能分别如下。
-        - 第一遍：
-        - 第二遍：
-        - 第三遍：
-        - 第四遍：	
+        - 第一遍：在当前指令的操作数中，为处于 use 状态的操作数标记上将使用物理寄存器，为在 early clobber list 中的操作数给物理寄存器标记上 free 或 reserved 的状态；计算 `hasTiedOps`, `hasEarlyClobbers` 和 `hasPartialRedefs` 这几个标志量；处理几种需要在 use 状态和 define 状态被分配到同一寄存器的情形；
+        - 第二遍：为 defined 且处于 use 状态的虚拟寄存器分配物理寄存器；为 undefined 的操作数分配寄存器；如果当前指令是函数调用，把所有虚拟寄存器都 spill 到内存；
+        - 第三遍：为处于 define 状态的物理寄存器标记状态为 free 或 reserved；
+        - 第四遍：为处于 define 状态的虚拟寄存器分配物理寄存器；kill 掉死的处于 define 状态的虚拟寄存器。
 
 
 - `calcSpillCost` 函数的执行流程？
