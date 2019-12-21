@@ -337,6 +337,10 @@ bbl loader
 - `allocateInstruction` 函数有几次扫描过程以及每一次扫描的功能？
     
     有 4 次扫描过程，每一遍的功能分别如下。
+        - 第一遍：
+        - 第二遍：
+        - 第三遍：
+        - 第四遍：	
 
 
 - `calcSpillCost` 函数的执行流程？
@@ -350,6 +354,9 @@ bbl loader
     - 如果此寄存器被 disabled，则检查所有和它重名的寄存器，将重名寄存器的代价相加为此寄存器的代价。
 
 - `hasTiedOps`，`hasPartialRedefs`，`hasEarlyClobbers` 变量的作用？
+    - `hasTiedOps`: 用于指示当前指令的操作数中是否有 tied operand，tied operand 指的是这个（作为结果）的操作数和一个作为输入的操作数共享寄存器，从而，当对作为结果的寄存器做完修改后，编译器就不能再使用那个作为输入的操作数，因为它的值也已经被改变；
+    - `hasPartialRedefs`: 用于指示当前指令的操作数是否有 partial redefine，partial redefine 指的是一个寄存器的子寄存器被重新定义，如 `%eax` 本来已被 tied 到一个变量，之后其低位 `%ax` 又被 tied 到另一个变量；
+    - `hasEarlyClobbers`: 用于指示是否有操作数在 early blobber list 中，从而告诉编译器，这个（作为结果）的操作数会被在所有输入都被使用前写入，因此不能让它和任何输入的操作数共享寄存器。
 
 #### 书上算法与 LLVM 的实现之间的不同点
 
