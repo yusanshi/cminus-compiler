@@ -20,8 +20,8 @@ include_directories(${PROJECT_BINARY_DIR})
 add_subdirectory(common)
 add_subdirectory(syntax_tree)
 
-add_subdirectory(lab1_lexical_analyzer)
-add_subdirectory(lab2_syntax_analyzer)
+add_subdirectory(lab1)
+add_subdirectory(lab2)
 
 add_executable(c-c
 	cminus_compiler.c

@@ -92,7 +92,7 @@ sudo make install
 
 ```bash
 cd ~/temp
-wget -O gcd.c http://210.45.114.30/staff/compiler_cminus/raw/master/lab1_lexical_analyzer/testcase/gcd.cminus
+wget -O gcd.c http://210.45.114.30/staff/compiler_cminus/raw/master/lab1/testcase/gcd.cminus
 
 
 # 方案一：先生成 RISC-V 汇编再生成可执行程序
