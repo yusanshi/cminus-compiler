@@ -1,6 +1,6 @@
 # Cminus Compiler
 
-This is course project of compiler principle. We have built a compiler for C Minus programming language.
+This is course project of Principles of Compiler. We have built a compiler for C Minus programming language.
 
 ## Team
 **Members**
@@ -8,7 +8,7 @@ This is course project of compiler principle. We have built a compiler for C Min
 - [weirane](https://github.com/weirane) (Team leader)
 - Me
 
-We got full marks in every task.😁
+We got full marks in every subtask.😁
 
 
 ## Lab
@@ -24,8 +24,7 @@ Lexical analyzer.
 ./build/test_lex
 
 # compare
-cd lab1 && diff tokens/gcd.tokens TA_tokens/gcd.tokens
-
+diff tokens/gcd.tokens lab1/TA_tokens/gcd.tokens
 ```
 
 ### Lab2

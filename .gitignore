@@ -1,5 +1,6 @@
 build/
 syntree/*
 !syntree/.gitkeep
-
+tokens/*
+!tokens/.gitkeep
 *.swp
